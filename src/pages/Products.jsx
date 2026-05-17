@@ -120,7 +120,7 @@ export default function Products() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Products & Inventory</h2>
           <p className="text-gray-600 mt-1">Manage your product catalog and stock levels</p>
@@ -141,7 +141,7 @@ export default function Products() {
             })
             setShowForm(!showForm)
           }}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
         >
           <Plus className="w-5 h-5" />
           Add Product

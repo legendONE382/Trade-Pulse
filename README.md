@@ -21,6 +21,46 @@ TradePulse is a WhatsApp-first business management app built for small sellers, 
 
 ## Deployment
 
+### Chrome Extension Installation
+
+TradePulse can be installed as a Chrome extension for quick access:
+
+#### Easy Installation (Recommended)
+
+1. **Download the extension**
+   - Go to [GitHub Releases](https://github.com/legendONE382/Trade-Pulse/releases)
+   - Download the latest `tradepulse-extension-*.zip` file
+   - Extract the zip file to a folder on your computer
+
+2. **Install in Chrome**
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" (toggle in top right)
+   - Click "Load unpacked"
+   - Select the extracted folder
+   - TradePulse will appear in your extensions!
+
+#### Developer Installation
+
+If you want to build the extension yourself:
+
+1. **Build the extension**
+   ```bash
+   npm run build:extension
+   ```
+
+2. **Load the extension in Chrome**
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" (toggle in top right)
+   - Click "Load unpacked"
+   - Select the `dist` folder from your project
+   - TradePulse will appear in your extensions!
+
+3. **Package for distribution**
+   ```bash
+   npm run package:extension
+   ```
+   This creates a zip file in the `releases/` folder that can be shared with others.
+
 ### Vercel Deployment (Recommended)
 
 1. **Push to GitHub** (already done)
@@ -151,6 +191,18 @@ TradePulse uses localStorage for data persistence. All your data is stored local
 - **TailwindCSS** - Styling
 - **Lucide React** - Icons
 - **date-fns** - Date formatting
+- **Supabase** - Authentication & Database
+- **Chrome Extension API** - Browser extension support
+
+## Browser Compatibility
+
+TradePulse is designed to work across all modern browsers:
+- **Chrome/Edge** (recommended) - Full support including Chrome extension
+- **Firefox** - Full support for web app
+- **Safari** - Full support including iOS Safari
+- **Mobile Browsers** - Optimized for mobile devices with responsive design
+
+The app uses standard web APIs and polyfills for maximum compatibility.
 
 ## Future Upgrades
 
@@ -182,6 +234,15 @@ Start free with basic tracking, then charge for premium features:
 - Small traders
 - Repair workers
 - Local service providers
+
+## Mobile Optimization
+
+TradePulse is fully optimized for mobile devices:
+- **Responsive Design** - All pages adapt to different screen sizes
+- **Touch-Friendly Interface** - Large buttons and touch targets
+- **Mobile Navigation** - Hamburger menu for easy navigation on phones
+- **Performance** - Optimized for fast loading on mobile networks
+- **PWA Support** - Can be installed as a progressive web app on mobile devices
 
 ## License
 
