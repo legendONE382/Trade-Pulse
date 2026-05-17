@@ -12,7 +12,8 @@ import {
   LogOut,
   User,
   Menu,
-  X
+  X,
+  Download
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -37,6 +38,12 @@ export default function Layout({ children }) {
     window.location.href = '/signin'
   }
 
+  const handleInstallPWA = () => {
+    if (window.installPWA) {
+      window.installPWA()
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -50,6 +57,17 @@ export default function Layout({ children }) {
               <h1 className="text-xl font-bold text-gray-900">TradePulse</h1>
             </div>
             <div className="flex items-center gap-4">
+              {/* PWA Install Button */}
+              <button
+                id="pwa-install-btn"
+                onClick={handleInstallPWA}
+                className="hidden items-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 py-2 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all shadow-md hover:shadow-lg text-sm font-medium"
+                style={{ display: 'none' }}
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Install App</span>
+                <span className="sm:hidden">Install</span>
+              </button>
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
                 <User className="w-4 h-4" />
                 <span>{user?.email}</span>

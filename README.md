@@ -21,9 +21,36 @@ TradePulse is a WhatsApp-first business management app built for small sellers, 
 
 ## Deployment
 
+### PWA Installation (Recommended)
+
+TradePulse is a Progressive Web App (PWA) that can be installed on your device for a native app-like experience:
+
+#### One-Click Installation
+
+1. **Open TradePulse in your browser**
+   - Navigate to your TradePulse URL (e.g., https://trade-pulse.vercel.app)
+   - Use Chrome, Edge, or Safari on mobile or desktop
+
+2. **Look for the install button**
+   - When the browser detects the app is installable, an "Install App" button will appear in the header
+   - Click the button to install TradePulse
+
+3. **Install the app**
+   - Follow the browser's installation prompt
+   - TradePulse will be added to your home screen (mobile) or applications (desktop)
+   - Launch it anytime like a native app!
+
+#### Manual Installation
+
+If the install button doesn't appear automatically:
+
+- **Chrome/Edge**: Click the install icon in the address bar (📱 or ⬇️)
+- **Safari (iOS)**: Tap Share → Add to Home Screen
+- **Safari (Mac)**: Click Share → Add to Dock
+
 ### Chrome Extension Installation
 
-TradePulse can be installed as a Chrome extension for quick access:
+TradePulse can also be installed as a Chrome extension for quick access:
 
 #### Easy Installation (Recommended)
 

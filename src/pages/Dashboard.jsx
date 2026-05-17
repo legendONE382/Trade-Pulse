@@ -7,9 +7,7 @@ import {
   Receipt,
   Users,
   ArrowUpRight,
-  ArrowDownRight,
-  Package,
-  Download
+  ArrowDownRight
 } from 'lucide-react'
 import { storage, formatCurrency, formatDate } from '../utils/storage'
 
@@ -88,30 +86,6 @@ export default function Dashboard() {
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
         <p className="text-gray-600 mt-1">Overview of your business performance</p>
-      </div>
-
-      {/* Chrome Extension Download Banner */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Install TradePulse Chrome Extension</h3>
-              <p className="text-sm text-gray-600">Get quick access to your business stats</p>
-            </div>
-          </div>
-          <a
-            href="https://github.com/legendONE382/Trade-Pulse/releases"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary flex items-center gap-2 whitespace-nowrap"
-          >
-            <Download className="w-4 h-4" />
-            Download Extension
-          </a>
-        </div>
       </div>
 
       {/* Stats Grid */}
