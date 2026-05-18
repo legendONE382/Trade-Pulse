@@ -9,7 +9,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react'
-import { storage, formatCurrency, formatDate } from '../utils/storage'
+import { getSales, getExpenses, getCustomers, getDebts, formatCurrency, formatDate } from '../utils/supabaseStorage'
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -26,10 +26,14 @@ export default function Dashboard() {
   const [recentExpenses, setRecentExpenses] = useState([])
 
   useEffect(() => {
-    const sales = storage.get('tradepulse_sales')
-    const expenses = storage.get('tradepulse_expenses')
-    const customers = storage.get('tradepulse_customers')
-    const debts = storage.get('tradepulse_debts')
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    const sales = await getSales()
+    const expenses = await getExpenses()
+    const customers = await getCustomers()
+    const debts = await getDebts()
 
     const today = new Date().toDateString()
 
@@ -57,7 +61,7 @@ export default function Dashboard() {
 
     setRecentSales(sales.slice(-5).reverse())
     setRecentExpenses(expenses.slice(-5).reverse())
-  }, [])
+  }
 
   const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
     <div className="card">

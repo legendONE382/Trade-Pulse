@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Package, AlertTriangle } from 'lucide-react'
-import { storage, generateId, formatCurrency } from '../utils/storage'
+import { Plus, Pencil, Trash2, Search, Package, AlertTriangle } from 'lucide-react'
+import { getProducts, addProduct, updateProduct, deleteProduct, formatCurrency } from '../utils/supabaseStorage'
 
 export default function Products() {
   const [products, setProducts] = useState([])
@@ -22,15 +22,16 @@ export default function Products() {
     loadProducts()
   }, [])
 
-  const loadProducts = () => {
-    setProducts(storage.get('tradepulse_products'))
+  const loadProducts = async () => {
+    const data = await getProducts()
+    setProducts(data)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     if (editingProduct) {
-      storage.update('tradepulse_products', editingProduct.id, {
+      await updateProduct(editingProduct.id, {
         ...formData,
         price: parseFloat(formData.price),
         cost: parseFloat(formData.cost),
@@ -39,14 +40,12 @@ export default function Products() {
       })
       setEditingProduct(null)
     } else {
-      storage.add('tradepulse_products', {
-        id: generateId(),
+      await addProduct({
         ...formData,
         price: parseFloat(formData.price),
         cost: parseFloat(formData.cost),
         stock: parseInt(formData.stock),
         minStock: parseInt(formData.minStock),
-        createdAt: new Date().toISOString(),
       })
     }
 
@@ -65,9 +64,9 @@ export default function Products() {
     loadProducts()
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      storage.delete('tradepulse_products', id)
+      await deleteProduct(id)
       loadProducts()
     }
   }

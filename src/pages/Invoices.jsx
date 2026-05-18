@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, Download, Share2, Trash2 } from 'lucide-react'
-import { storage, generateId, formatCurrency, formatDate } from '../utils/storage'
-import { shareViaWhatsApp, formatInvoiceForWhatsApp } from '../utils/whatsapp'
+import { Plus, Download, Trash2, Share2, FileText } from 'lucide-react'
+import { getInvoices, addInvoice, updateInvoice, deleteInvoice, getCustomers, formatCurrency, formatDate } from '../utils/supabaseStorage'
+import { shareViaWhatsApp, formatInvoiceForWhatsApp, generateInvoiceNumber } from '../utils/whatsapp'
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState([])
@@ -19,12 +19,14 @@ export default function Invoices() {
     loadCustomers()
   }, [])
 
-  const loadInvoices = () => {
-    setInvoices(storage.get('tradepulse_invoices'))
+  const loadInvoices = async () => {
+    const data = await getInvoices()
+    setInvoices(data)
   }
 
-  const loadCustomers = () => {
-    setCustomers(storage.get('tradepulse_customers'))
+  const loadCustomers = async () => {
+    const data = await getCustomers()
+    setCustomers(data)
   }
 
   const addItem = () => {
@@ -51,18 +53,13 @@ export default function Invoices() {
     return formData.items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
-    const invoice = {
-      id: generateId(),
+    await addInvoice({
       ...formData,
       total: calculateTotal(),
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    }
-
-    storage.add('tradepulse_invoices', invoice)
+    })
 
     setFormData({
       customerId: '',
@@ -74,9 +71,9 @@ export default function Invoices() {
     loadInvoices()
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this invoice?')) {
-      storage.delete('tradepulse_invoices', id)
+      await deleteInvoice(id)
       loadInvoices()
     }
   }

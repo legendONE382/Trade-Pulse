@@ -35,6 +35,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
   if (installBtn) {
     installBtn.style.display = 'flex';
   }
+  console.log('PWA install prompt detected');
 });
 
 window.addEventListener('appinstalled', () => {
@@ -44,6 +45,7 @@ window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
   }
   deferredPrompt = null;
+  console.log('PWA installed successfully');
 });
 
 // Expose the install function globally
@@ -59,8 +61,21 @@ window.installPWA = async () => {
     if (installBtn) {
       installBtn.style.display = 'none';
     }
+  } else {
+    console.log('No install prompt available. Make sure you are on HTTPS and the app is installable.');
   }
 };
+
+// Show install button in development for testing
+if (import.meta.env.DEV) {
+  setTimeout(() => {
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+      installBtn.style.display = 'flex';
+      console.log('Install button shown for development testing');
+    }
+  }, 2000);
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

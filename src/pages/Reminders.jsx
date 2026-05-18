@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Bell, Calendar, CheckCircle, Share2 } from 'lucide-react'
-import { storage, generateId, formatDate } from '../utils/storage'
+import { Plus, Check, X, Pencil, Trash2, Share2, Bell } from 'lucide-react'
+import { getReminders, addReminder, updateReminder, deleteReminder, getCustomers, formatDate } from '../utils/supabaseStorage'
 import { shareViaWhatsApp, formatReminderForWhatsApp } from '../utils/whatsapp'
 
 export default function Reminders() {
@@ -19,22 +19,22 @@ export default function Reminders() {
     loadCustomers()
   }, [])
 
-  const loadReminders = () => {
-    setReminders(storage.get('tradepulse_reminders'))
+  const loadReminders = async () => {
+    const data = await getReminders()
+    setReminders(data)
   }
 
-  const loadCustomers = () => {
-    setCustomers(storage.get('tradepulse_customers'))
+  const loadCustomers = async () => {
+    const data = await getCustomers()
+    setCustomers(data)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
-    storage.add('tradepulse_reminders', {
-      id: generateId(),
+    await addReminder({
       ...formData,
       status: 'pending',
-      createdAt: new Date().toISOString(),
     })
 
     setFormData({
@@ -47,15 +47,15 @@ export default function Reminders() {
     loadReminders()
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this reminder?')) {
-      storage.delete('tradepulse_reminders', id)
+      await deleteReminder(id)
       loadReminders()
     }
   }
 
-  const handleComplete = (id) => {
-    storage.update('tradepulse_reminders', id, { status: 'completed', completedAt: new Date().toISOString() })
+  const handleComplete = async (id) => {
+    await updateReminder(id, { status: 'completed' })
     loadReminders()
   }
 

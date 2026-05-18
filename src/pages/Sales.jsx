@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2 } from 'lucide-react'
-import { storage, generateId, formatCurrency, formatDate } from '../utils/storage'
+import { Plus, Pencil, Trash2, Search } from 'lucide-react'
+import { getSales, addSale, updateSale, deleteSale, getCustomers, formatCurrency, formatDate } from '../utils/supabaseStorage'
 
 export default function Sales() {
   const [sales, setSales] = useState([])
@@ -19,23 +19,27 @@ export default function Sales() {
     loadCustomers()
   }, [])
 
-  const loadSales = () => {
-    setSales(storage.get('tradepulse_sales'))
+  const loadSales = async () => {
+    const data = await getSales()
+    setSales(data)
   }
 
-  const loadCustomers = () => {
-    setCustomers(storage.get('tradepulse_customers'))
+  const loadCustomers = async () => {
+    const data = await getCustomers()
+    setCustomers(data)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     if (editingSale) {
-      storage.update('tradepulse_sales', editingSale.id, formData)
+      await updateSale(editingSale.id, {
+        ...formData,
+        amount: parseFloat(formData.amount),
+      })
       setEditingSale(null)
     } else {
-      storage.add('tradepulse_sales', {
-        id: generateId(),
+      await addSale({
         ...formData,
         amount: parseFloat(formData.amount),
       })
@@ -51,9 +55,9 @@ export default function Sales() {
     loadSales()
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this sale?')) {
-      storage.delete('tradepulse_sales', id)
+      await deleteSale(id)
       loadSales()
     }
   }

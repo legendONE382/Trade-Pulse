@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, CheckCircle, Clock } from 'lucide-react'
-import { storage, generateId, formatCurrency, formatDate } from '../utils/storage'
+import { Plus, Check, X, Pencil, Trash2 } from 'lucide-react'
+import { getDebts, addDebt, updateDebt, deleteDebt, getCustomers, formatCurrency, formatDate } from '../utils/supabaseStorage'
 
 export default function Debts() {
   const [debts, setDebts] = useState([])
@@ -18,23 +18,23 @@ export default function Debts() {
     loadCustomers()
   }, [])
 
-  const loadDebts = () => {
-    setDebts(storage.get('tradepulse_debts'))
+  const loadDebts = async () => {
+    const data = await getDebts()
+    setDebts(data)
   }
 
-  const loadCustomers = () => {
-    setCustomers(storage.get('tradepulse_customers'))
+  const loadCustomers = async () => {
+    const data = await getCustomers()
+    setCustomers(data)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
-    storage.add('tradepulse_debts', {
-      id: generateId(),
+    await addDebt({
       ...formData,
       amount: parseFloat(formData.amount),
       status: 'pending',
-      createdAt: new Date().toISOString(),
     })
 
     setFormData({
@@ -47,15 +47,15 @@ export default function Debts() {
     loadDebts()
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this debt?')) {
-      storage.delete('tradepulse_debts', id)
+      await deleteDebt(id)
       loadDebts()
     }
   }
 
-  const handleMarkPaid = (id) => {
-    storage.update('tradepulse_debts', id, { status: 'paid', paidAt: new Date().toISOString() })
+  const handleMarkPaid = async (id) => {
+    await updateDebt(id, { status: 'paid' })
     loadDebts()
   }
 
