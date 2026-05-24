@@ -72,9 +72,10 @@ if (import.meta.env.DEV) {
     const installBtn = document.getElementById('pwa-install-btn');
     if (installBtn) {
       installBtn.style.display = 'flex';
+      installBtn.classList.remove('hidden');
       console.log('Install button shown for development testing');
     }
-  }, 2000);
+  }, 1000);
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

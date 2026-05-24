@@ -1,14 +1,14 @@
 import { supabase } from '../lib/supabase'
 
 // Helper function to get current user
-const getCurrentUserId = () => {
-  const { data: { user } } = supabase.auth.getUser()
+const getCurrentUserId = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
   return user?.id
 }
 
 // Sales
 export const getSales = async () => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return []
   
   const { data, error } = await supabase
@@ -26,7 +26,7 @@ export const getSales = async () => {
 }
 
 export const addSale = async (sale) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -44,7 +44,7 @@ export const addSale = async (sale) => {
 }
 
 export const updateSale = async (id, updates) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -64,7 +64,7 @@ export const updateSale = async (id, updates) => {
 }
 
 export const deleteSale = async (id) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return false
   
   const { error } = await supabase
@@ -83,7 +83,7 @@ export const deleteSale = async (id) => {
 
 // Expenses
 export const getExpenses = async () => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return []
   
   const { data, error } = await supabase
@@ -101,7 +101,7 @@ export const getExpenses = async () => {
 }
 
 export const addExpense = async (expense) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -119,7 +119,7 @@ export const addExpense = async (expense) => {
 }
 
 export const updateExpense = async (id, updates) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -139,7 +139,7 @@ export const updateExpense = async (id, updates) => {
 }
 
 export const deleteExpense = async (id) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return false
   
   const { error } = await supabase
@@ -158,7 +158,7 @@ export const deleteExpense = async (id) => {
 
 // Customers
 export const getCustomers = async () => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return []
   
   const { data, error } = await supabase
@@ -176,7 +176,7 @@ export const getCustomers = async () => {
 }
 
 export const addCustomer = async (customer) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -194,7 +194,7 @@ export const addCustomer = async (customer) => {
 }
 
 export const updateCustomer = async (id, updates) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -214,7 +214,7 @@ export const updateCustomer = async (id, updates) => {
 }
 
 export const deleteCustomer = async (id) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return false
   
   const { error } = await supabase
@@ -233,7 +233,7 @@ export const deleteCustomer = async (id) => {
 
 // Debts
 export const getDebts = async () => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return []
   
   const { data, error } = await supabase
@@ -251,7 +251,7 @@ export const getDebts = async () => {
 }
 
 export const addDebt = async (debt) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -269,7 +269,7 @@ export const addDebt = async (debt) => {
 }
 
 export const updateDebt = async (id, updates) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -289,7 +289,7 @@ export const updateDebt = async (id, updates) => {
 }
 
 export const deleteDebt = async (id) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return false
   
   const { error } = await supabase
@@ -308,7 +308,7 @@ export const deleteDebt = async (id) => {
 
 // Invoices
 export const getInvoices = async () => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return []
   
   const { data, error } = await supabase
@@ -326,7 +326,7 @@ export const getInvoices = async () => {
 }
 
 export const addInvoice = async (invoice) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -344,7 +344,7 @@ export const addInvoice = async (invoice) => {
 }
 
 export const updateInvoice = async (id, updates) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -364,7 +364,7 @@ export const updateInvoice = async (id, updates) => {
 }
 
 export const deleteInvoice = async (id) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return false
   
   const { error } = await supabase
@@ -383,7 +383,7 @@ export const deleteInvoice = async (id) => {
 
 // Reminders
 export const getReminders = async () => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return []
   
   const { data, error } = await supabase
@@ -401,7 +401,7 @@ export const getReminders = async () => {
 }
 
 export const addReminder = async (reminder) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -419,7 +419,7 @@ export const addReminder = async (reminder) => {
 }
 
 export const updateReminder = async (id, updates) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -439,7 +439,7 @@ export const updateReminder = async (id, updates) => {
 }
 
 export const deleteReminder = async (id) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return false
   
   const { error } = await supabase
@@ -458,7 +458,7 @@ export const deleteReminder = async (id) => {
 
 // Products
 export const getProducts = async () => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return []
   
   const { data, error } = await supabase
@@ -476,7 +476,7 @@ export const getProducts = async () => {
 }
 
 export const addProduct = async (product) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -494,7 +494,7 @@ export const addProduct = async (product) => {
 }
 
 export const updateProduct = async (id, updates) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return null
   
   const { data, error } = await supabase
@@ -514,7 +514,7 @@ export const updateProduct = async (id, updates) => {
 }
 
 export const deleteProduct = async (id) => {
-  const userId = getCurrentUserId()
+  const userId = await getCurrentUserId()
   if (!userId) return false
   
   const { error } = await supabase
