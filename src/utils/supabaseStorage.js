@@ -238,7 +238,7 @@ export const getDebts = async () => {
   
   const { data, error } = await supabase
     .from('debts')
-    .select('*, customers(name, phone)')
+    .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
   
@@ -313,7 +313,7 @@ export const getInvoices = async () => {
   
   const { data, error } = await supabase
     .from('invoices')
-    .select('*, customers(name, phone, email)')
+    .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
   
@@ -388,7 +388,7 @@ export const getReminders = async () => {
   
   const { data, error } = await supabase
     .from('reminders')
-    .select('*, customers(name, phone)')
+    .select('*')
     .eq('user_id', userId)
     .order('date', { ascending: true })
   
