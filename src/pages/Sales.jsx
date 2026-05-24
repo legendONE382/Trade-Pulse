@@ -9,7 +9,7 @@ export default function Sales() {
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    customerId: '',
+    customer_id: '',
     date: new Date().toISOString().split('T')[0],
   })
   const [customers, setCustomers] = useState([])
@@ -48,7 +48,7 @@ export default function Sales() {
     setFormData({
       description: '',
       amount: '',
-      customerId: '',
+      customer_id: '',
       date: new Date().toISOString().split('T')[0],
     })
     setShowForm(false)
@@ -67,7 +67,7 @@ export default function Sales() {
     setFormData({
       description: sale.description,
       amount: sale.amount,
-      customerId: sale.customerId || '',
+      customer_id: sale.customer_id || '',
       date: sale.date,
     })
     setShowForm(true)
@@ -91,7 +91,7 @@ export default function Sales() {
             setFormData({
               description: '',
               amount: '',
-              customerId: '',
+              customer_id: '',
               date: new Date().toISOString().split('T')[0],
             })
             setShowForm(!showForm)
@@ -142,8 +142,8 @@ export default function Sales() {
                 Customer (Optional)
               </label>
               <select
-                value={formData.customerId}
-                onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                value={formData.customer_id}
+                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 className="input-field"
               >
                 <option value="">Walk-in Customer</option>
@@ -220,7 +220,7 @@ export default function Sales() {
                       {sale.description}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {getCustomerName(sale.customerId)}
+                      {getCustomerName(sale.customer_id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                       {formatCurrency(sale.amount)}

@@ -14,7 +14,7 @@ export default function Products() {
     price: '',
     cost: '',
     stock: '',
-    minStock: '5',
+    min_stock: '5',
     description: '',
   })
 
@@ -36,7 +36,7 @@ export default function Products() {
         price: parseFloat(formData.price),
         cost: parseFloat(formData.cost),
         stock: parseInt(formData.stock),
-        minStock: parseInt(formData.minStock),
+        min_stock: parseInt(formData.min_stock),
       })
       setEditingProduct(null)
     } else {
@@ -45,7 +45,7 @@ export default function Products() {
         price: parseFloat(formData.price),
         cost: parseFloat(formData.cost),
         stock: parseInt(formData.stock),
-        minStock: parseInt(formData.minStock),
+        min_stock: parseInt(formData.min_stock),
       })
     }
 
@@ -57,7 +57,7 @@ export default function Products() {
       price: '',
       cost: '',
       stock: '',
-      minStock: '5',
+      min_stock: '5',
       description: '',
     })
     setShowForm(false)
@@ -81,23 +81,23 @@ export default function Products() {
       price: product.price,
       cost: product.cost || '',
       stock: product.stock,
-      minStock: product.minStock || '5',
+      min_stock: product.min_stock || '5',
       description: product.description || '',
     })
     setShowForm(true)
   }
 
-  const adjustStock = (id, adjustment) => {
+  const adjustStock = async (id, adjustment) => {
     const product = products.find(p => p.id === id)
     if (product) {
       const newStock = Math.max(0, product.stock + adjustment)
-      storage.update('tradepulse_products', id, { stock: newStock })
+      await updateProduct(id, { stock: newStock })
       loadProducts()
     }
   }
 
   const getLowStockProducts = () => {
-    return products.filter(p => p.stock <= p.minStock)
+    return products.filter(p => p.stock <= p.min_stock)
   }
 
   const getTotalStockValue = () => {
@@ -135,7 +135,7 @@ export default function Products() {
               price: '',
               cost: '',
               stock: '',
-              minStock: '5',
+              min_stock: '5',
               description: '',
             })
             setShowForm(!showForm)
@@ -196,7 +196,7 @@ export default function Products() {
               <div key={product.id} className="flex justify-between items-center text-sm">
                 <span className="text-orange-800">{product.name}</span>
                 <span className="font-semibold text-orange-900">
-                  {product.stock} left (min: {product.minStock})
+                  {product.stock} left (min: {product.min_stock})
                 </span>
               </div>
             ))}
@@ -315,8 +315,8 @@ export default function Products() {
                 <input
                   type="number"
                   min="0"
-                  value={formData.minStock}
-                  onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+                  value={formData.min_stock}
+                  onChange={(e) => setFormData({ ...formData, min_stock: e.target.value })}
                   className="input-field"
                   placeholder="5"
                 />
@@ -407,7 +407,7 @@ export default function Products() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <span className={`font-semibold ${
-                          product.stock <= product.minStock ? 'text-red-600' : 'text-gray-900'
+                          product.stock <= product.min_stock ? 'text-red-600' : 'text-gray-900'
                         }`}>
                           {product.stock}
                         </span>
@@ -432,7 +432,7 @@ export default function Products() {
                         <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
                           Out of Stock
                         </span>
-                      ) : product.stock <= product.minStock ? (
+                      ) : product.stock <= product.min_stock ? (
                         <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
                           Low Stock
                         </span>

@@ -7,10 +7,10 @@ export default function Invoices() {
   const [invoices, setInvoices] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
-    customerId: '',
+    customer_id: '',
     items: [{ description: '', quantity: 1, price: 0 }],
     notes: '',
-    dueDate: '',
+    due_date: '',
   })
   const [customers, setCustomers] = useState([])
 
@@ -62,10 +62,10 @@ export default function Invoices() {
     })
 
     setFormData({
-      customerId: '',
+      customer_id: '',
       items: [{ description: '', quantity: 1, price: 0 }],
       notes: '',
-      dueDate: '',
+      due_date: '',
     })
     setShowForm(false)
     loadInvoices()
@@ -88,12 +88,12 @@ export default function Invoices() {
   }
 
   const downloadInvoice = (invoice) => {
-    const customer = customers.find(c => c.id === invoice.customerId)
+    const customer = customers.find(c => c.id === invoice.customer_id)
     const text = `
 INVOICE
 ${generateInvoiceNumber(invoice.id)}
-Date: ${formatDate(invoice.createdAt)}
-Due: ${invoice.dueDate ? formatDate(invoice.dueDate) : 'N/A'}
+Date: ${formatDate(invoice.created_at)}
+Due: ${invoice.due_date ? formatDate(invoice.due_date) : 'N/A'}
 
 BILL TO:
 ${customer ? customer.name : 'Unknown'}
@@ -122,7 +122,7 @@ ${invoice.notes || 'None'}
   }
 
   const shareInvoiceViaWhatsApp = (invoice) => {
-    const customer = customers.find(c => c.id === invoice.customerId)
+    const customer = customers.find(c => c.id === invoice.customer_id)
     const message = formatInvoiceForWhatsApp(invoice, customer, generateInvoiceNumber(invoice.id))
     shareViaWhatsApp(customer?.phone, message)
   }
@@ -137,10 +137,10 @@ ${invoice.notes || 'None'}
         <button
           onClick={() => {
             setFormData({
-              customerId: '',
+              customer_id: '',
               items: [{ description: '', quantity: 1, price: 0 }],
               notes: '',
-              dueDate: '',
+              due_date: '',
             })
             setShowForm(!showForm)
           }}
@@ -161,8 +161,8 @@ ${invoice.notes || 'None'}
               </label>
               <select
                 required
-                value={formData.customerId}
-                onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                value={formData.customer_id}
+                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 className="input-field"
               >
                 <option value="">Select customer</option>
@@ -242,8 +242,8 @@ ${invoice.notes || 'None'}
               </label>
               <input
                 type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                value={formData.due_date}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 className="input-field"
               />
             </div>
@@ -290,7 +290,7 @@ ${invoice.notes || 'None'}
                     {generateInvoiceNumber(invoice.id)}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {getCustomerName(invoice.customerId)} • {formatDate(invoice.createdAt)}
+                    {getCustomerName(invoice.customer_id)} • {formatDate(invoice.created_at)}
                   </p>
                 </div>
                 <div className="flex gap-2">

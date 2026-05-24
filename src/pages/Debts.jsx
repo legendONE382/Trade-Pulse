@@ -6,10 +6,10 @@ export default function Debts() {
   const [debts, setDebts] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
-    customerId: '',
+    customer_id: '',
     amount: '',
     description: '',
-    dueDate: '',
+    due_date: '',
   })
   const [customers, setCustomers] = useState([])
 
@@ -38,10 +38,10 @@ export default function Debts() {
     })
 
     setFormData({
-      customerId: '',
+      customer_id: '',
       amount: '',
       description: '',
-      dueDate: '',
+      due_date: '',
     })
     setShowForm(false)
     loadDebts()
@@ -77,10 +77,10 @@ export default function Debts() {
         <button
           onClick={() => {
             setFormData({
-              customerId: '',
+              customer_id: '',
               amount: '',
               description: '',
-              dueDate: '',
+              due_date: '',
             })
             setShowForm(!showForm)
           }}
@@ -101,8 +101,8 @@ export default function Debts() {
               </label>
               <select
                 required
-                value={formData.customerId}
-                onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                value={formData.customer_id}
+                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 className="input-field"
               >
                 <option value="">Select customer</option>
@@ -146,8 +146,8 @@ export default function Debts() {
               </label>
               <input
                 type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                value={formData.due_date}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 className="input-field"
               />
             </div>
@@ -181,7 +181,7 @@ export default function Debts() {
               <div key={debt.id} className="card flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900">{getCustomerName(debt.customerId)}</p>
+                    <p className="font-semibold text-gray-900">{getCustomerName(debt.customer_id)}</p>
                     <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
                       Pending
                     </span>
@@ -193,8 +193,8 @@ export default function Debts() {
                     <span className="font-semibold text-orange-600">
                       {formatCurrency(debt.amount)}
                     </span>
-                    {debt.dueDate && (
-                      <span>Due: {formatDate(debt.dueDate)}</span>
+                    {debt.due_date && (
+                      <span>Due: {formatDate(debt.due_date)}</span>
                     )}
                   </div>
                 </div>
@@ -233,7 +233,7 @@ export default function Debts() {
               <div key={debt.id} className="card flex items-center justify-between opacity-75">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900">{getCustomerName(debt.customerId)}</p>
+                    <p className="font-semibold text-gray-900">{getCustomerName(debt.customer_id)}</p>
                     <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                       Paid
                     </span>
@@ -245,8 +245,8 @@ export default function Debts() {
                     <span className="font-semibold text-green-600">
                       {formatCurrency(debt.amount)}
                     </span>
-                    {debt.paidAt && (
-                      <span>Paid on: {formatDate(debt.paidAt)}</span>
+                    {debt.paid_at && (
+                      <span>Paid on: {formatDate(debt.paid_at)}</span>
                     )}
                   </div>
                 </div>

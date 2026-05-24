@@ -10,7 +10,7 @@ export default function Reminders() {
     title: '',
     description: '',
     date: '',
-    customerId: '',
+    customer_id: '',
   })
   const [customers, setCustomers] = useState([])
 
@@ -41,7 +41,7 @@ export default function Reminders() {
       title: '',
       description: '',
       date: '',
-      customerId: '',
+      customer_id: '',
     })
     setShowForm(false)
     loadReminders()
@@ -60,7 +60,7 @@ export default function Reminders() {
   }
 
   const shareReminderViaWhatsApp = (reminder) => {
-    const customer = customers.find(c => c.id === reminder.customerId)
+    const customer = customers.find(c => c.id === reminder.customer_id)
     const message = formatReminderForWhatsApp(reminder, customer)
     shareViaWhatsApp(customer?.phone, message)
   }
@@ -94,7 +94,7 @@ export default function Reminders() {
               title: '',
               description: '',
               date: '',
-              customerId: '',
+              customer_id: '',
             })
             setShowForm(!showForm)
           }}
@@ -151,8 +151,8 @@ export default function Reminders() {
                 Related Customer (Optional)
               </label>
               <select
-                value={formData.customerId}
-                onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                value={formData.customer_id}
+                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 className="input-field"
               >
                 <option value="">No specific customer</option>
@@ -221,8 +221,8 @@ export default function Reminders() {
                         <Calendar className="w-3 h-3" />
                         {formatDate(reminder.date)}
                       </span>
-                      {getCustomerName(reminder.customerId) && (
-                        <span>Customer: {getCustomerName(reminder.customerId)}</span>
+                      {getCustomerName(reminder.customer_id) && (
+                        <span>Customer: {getCustomerName(reminder.customer_id)}</span>
                       )}
                     </div>
                   </div>
@@ -277,8 +277,8 @@ export default function Reminders() {
                       <Calendar className="w-3 h-3" />
                       {formatDate(reminder.date)}
                     </span>
-                    {reminder.completedAt && (
-                      <span>Completed: {formatDate(reminder.completedAt)}</span>
+                    {reminder.completed_at && (
+                      <span>Completed: {formatDate(reminder.completed_at)}</span>
                     )}
                   </div>
                 </div>
