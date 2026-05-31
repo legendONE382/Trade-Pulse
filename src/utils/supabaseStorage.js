@@ -2,8 +2,14 @@ import { supabase } from '../lib/supabase'
 
 // Helper function to get current user
 const getCurrentUserId = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    console.debug('supabase.getUser -> user id:', user?.id)
+    return user?.id
+  } catch (err) {
+    console.error('Error getting current Supabase user:', err)
+    return null
+  }
 }
 
 // Sales

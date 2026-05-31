@@ -74,7 +74,10 @@ export default function Layout({ children }) {
               </button>
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
                 <User className="w-4 h-4" />
-                <span>{user?.email}</span>
+                <div className="flex flex-col">
+                  <span>{user?.email}</span>
+                  <span className="text-xs text-gray-400">id: {user?.id ?? 'not-signed-in'}</span>
+                </div>
               </div>
               <button
                 onClick={handleSignOut}
