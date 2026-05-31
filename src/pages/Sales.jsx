@@ -13,6 +13,8 @@ export default function Sales() {
     date: new Date().toISOString().split('T')[0],
   })
   const [customers, setCustomers] = useState([])
+  const [submitError, setSubmitError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     loadSales()
@@ -31,33 +33,44 @@ export default function Sales() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    if (editingSale) {
-      await updateSale(editingSale.id, {
-        ...formData,
-        amount: parseFloat(formData.amount),
-      })
-      setEditingSale(null)
-    } else {
-      const added = await addSale({
-        ...formData,
-        amount: parseFloat(formData.amount),
-      })
-      if (!added) {
-        // Give user immediate feedback and keep the form open for correction
-        alert('Error adding sale. Please check the amount and try again. See console for details.')
-        return
-      }
-    }
+    setSubmitError('')
+    setIsSubmitting(true)
 
-    setFormData({
-      description: '',
-      amount: '',
-      customer_id: '',
-      date: new Date().toISOString().split('T')[0],
-    })
-    setShowForm(false)
-    loadSales()
+    try {
+      let result
+      if (editingSale) {
+        result = await updateSale(editingSale.id, {
+          ...formData,
+          amount: parseFloat(formData.amount),
+        })
+        if (!result) {
+          throw new Error('Unable to update sale. Please try again.')
+        }
+        setEditingSale(null)
+      } else {
+        result = await addSale({
+          ...formData,
+          amount: parseFloat(formData.amount),
+        })
+        if (!result) {
+          throw new Error('Unable to add sale. Please check your values and try again.')
+        }
+      }
+
+      setFormData({
+        description: '',
+        amount: '',
+        customer_id: '',
+        date: new Date().toISOString().split('T')[0],
+      })
+      setShowForm(false)
+      loadSales()
+    } catch (error) {
+      console.error('Sale submit error:', error)
+      setSubmitError(error?.message || 'An unexpected error occurred while saving the sale.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleDelete = async (id) => {
@@ -171,13 +184,24 @@ export default function Sales() {
                 className="input-field"
               />
             </div>
+            {submitError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {submitError}
+              </div>
+            )}
             <div className="flex gap-3">
-              <button type="submit" className="btn-primary flex-1">
-                {editingSale ? 'Update Sale' : 'Add Sale'}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`btn-primary flex-1 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting ? 'Saving...' : editingSale ? 'Update Sale' : 'Add Sale'}
               </button>
               <button
                 type="button"
+                disabled={isSubmitting}
                 onClick={() => {
+                  if (isSubmitting) return
                   setShowForm(false)
                   setEditingSale(null)
                 }}

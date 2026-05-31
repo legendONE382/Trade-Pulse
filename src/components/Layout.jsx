@@ -76,7 +76,7 @@ export default function Layout({ children }) {
                 <User className="w-4 h-4" />
                 <div className="flex flex-col">
                   <span>{user?.email}</span>
-                  <span className="text-xs text-gray-400">id: {user?.id ?? 'not-signed-in'}</span>
+                  <span className="text-xs text-gray-400">{user?.email ? 'Logged in' : 'Guest'}</span>
                 </div>
               </div>
               <button

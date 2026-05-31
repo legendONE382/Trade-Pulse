@@ -4,6 +4,10 @@
 
 **TradePulse is a fast, WhatsApp-first money tracking app for small sellers, side hustles, and local businesses.**
 
+Live demo: https://trade-pulse-rose.vercel.app
+
+**Deployed on Vercel and ready for device testing.**
+
 ## Overview
 
 TradePulse helps small business owners manage sales, expenses, customers, debts, invoices, reminders, and inventory—all from a modern PWA interface.
@@ -42,6 +46,16 @@ npm run preview
 The production files are generated in `dist/`.
 
 ## Deployment
+
+### Vercel (recommended)
+
+This app is already deployed at the URL above. Push to the `main` branch and Vercel will automatically build and deploy the latest changes.
+
+1. Add required environment variables in the Vercel dashboard.
+2. Confirm the site URL is listed in Supabase auth redirect settings.
+3. Use the live demo link for cross-device testing.
+
+## Supabase Setup
 
 ### Vercel (recommended)
 
