@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Download, Trash2, Share2, FileText } from 'lucide-react'
 import { getInvoices, addInvoice, updateInvoice, deleteInvoice, getCustomers, formatCurrency, formatDate } from '../utils/supabaseStorage'
-import { shareViaWhatsApp, formatInvoiceForWhatsApp, generateInvoiceNumber } from '../utils/whatsapp'
+import { shareViaWhatsApp, formatInvoiceForWhatsApp } from '../utils/whatsapp'
 
 export default function Invoices() {
   const [invoices, setInvoices] = useState([])

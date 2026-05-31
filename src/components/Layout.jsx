@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -32,6 +32,10 @@ export default function Layout({ children }) {
   const location = useLocation()
   const { user, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    window.updatePWAInstallButton?.()
+  }, [])
 
   const handleSignOut = async () => {
     await signOut()

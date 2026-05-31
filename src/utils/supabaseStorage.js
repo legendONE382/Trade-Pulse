@@ -31,7 +31,7 @@ export const addSale = async (sale) => {
   
   const { data, error } = await supabase
     .from('sales')
-    .insert([{ ...sale, user_id: userId }])
+    .insert([{ id: generateId(), ...sale, user_id: userId }])
     .select()
     .single()
   
@@ -106,7 +106,7 @@ export const addExpense = async (expense) => {
   
   const { data, error } = await supabase
     .from('expenses')
-    .insert([{ ...expense, user_id: userId }])
+    .insert([{ id: generateId(), ...expense, user_id: userId }])
     .select()
     .single()
   
@@ -181,7 +181,7 @@ export const addCustomer = async (customer) => {
   
   const { data, error } = await supabase
     .from('customers')
-    .insert([{ ...customer, user_id: userId }])
+    .insert([{ id: generateId(), ...customer, user_id: userId }])
     .select()
     .single()
   
@@ -256,7 +256,7 @@ export const addDebt = async (debt) => {
   
   const { data, error } = await supabase
     .from('debts')
-    .insert([{ ...debt, user_id: userId }])
+    .insert([{ id: generateId(), ...debt, user_id: userId }])
     .select()
     .single()
   
@@ -331,7 +331,7 @@ export const addInvoice = async (invoice) => {
   
   const { data, error } = await supabase
     .from('invoices')
-    .insert([{ ...invoice, user_id: userId }])
+    .insert([{ id: generateId(), ...invoice, user_id: userId }])
     .select()
     .single()
   
@@ -406,7 +406,7 @@ export const addReminder = async (reminder) => {
   
   const { data, error } = await supabase
     .from('reminders')
-    .insert([{ ...reminder, user_id: userId }])
+    .insert([{ id: generateId(), ...reminder, user_id: userId }])
     .select()
     .single()
   
@@ -481,7 +481,7 @@ export const addProduct = async (product) => {
   
   const { data, error } = await supabase
     .from('products')
-    .insert([{ ...product, user_id: userId }])
+    .insert([{ id: generateId(), ...product, user_id: userId }])
     .select()
     .single()
   
