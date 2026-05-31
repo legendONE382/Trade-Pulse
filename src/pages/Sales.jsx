@@ -39,10 +39,15 @@ export default function Sales() {
       })
       setEditingSale(null)
     } else {
-      await addSale({
+      const added = await addSale({
         ...formData,
         amount: parseFloat(formData.amount),
       })
+      if (!added) {
+        // Give user immediate feedback and keep the form open for correction
+        alert('Error adding sale. Please check the amount and try again. See console for details.')
+        return
+      }
     }
 
     setFormData({
@@ -233,7 +238,7 @@ export default function Sales() {
                         onClick={() => handleEdit(sale)}
                         className="text-blue-600 hover:text-blue-800 mr-3"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(sale.id)}

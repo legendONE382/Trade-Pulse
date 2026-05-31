@@ -34,10 +34,25 @@ export const getSales = async () => {
 export const addSale = async (sale) => {
   const userId = await getCurrentUserId()
   if (!userId) return null
-  
+  // Ensure amount is a finite number and within DECIMAL(10,2) limits
+  const MAX_AMOUNT = 99999999.99 // DECIMAL(10,2) max absolute value
+  let amt = Number(sale.amount)
+  if (!Number.isFinite(amt) || Number.isNaN(amt)) {
+    console.warn('addSale: invalid amount, defaulting to 0', sale.amount)
+    amt = 0
+  }
+  // Clamp and round to 2 decimals
+  if (Math.abs(amt) > MAX_AMOUNT) {
+    console.warn('addSale: amount exceeds max, clamping', amt)
+    amt = Math.sign(amt) * MAX_AMOUNT
+  }
+  amt = Math.round((amt + Number.EPSILON) * 100) / 100
+
+  const payload = { id: generateId(), ...sale, amount: amt, user_id: userId }
+
   const { data, error } = await supabase
     .from('sales')
-    .insert([{ id: generateId(), ...sale, user_id: userId }])
+    .insert([payload])
     .select()
     .single()
   

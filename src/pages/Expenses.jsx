@@ -232,7 +232,7 @@ export default function Expenses() {
                         onClick={() => handleEdit(expense)}
                         className="text-blue-600 hover:text-blue-800 mr-3"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(expense.id)}

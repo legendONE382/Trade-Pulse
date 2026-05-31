@@ -189,7 +189,7 @@ export default function Customers() {
                     onClick={() => handleEdit(customer)}
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(customer.id)}

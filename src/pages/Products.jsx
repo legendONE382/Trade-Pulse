@@ -447,7 +447,7 @@ export default function Products() {
                         onClick={() => handleEdit(product)}
                         className="text-blue-600 hover:text-blue-800 mr-3"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(product.id)}
