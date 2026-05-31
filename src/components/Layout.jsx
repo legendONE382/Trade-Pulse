@@ -32,9 +32,32 @@ export default function Layout({ children }) {
   const location = useLocation()
   const { user, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [installAvailable, setInstallAvailable] = useState(false)
 
   useEffect(() => {
-    window.updatePWAInstallButton?.()
+    const readyForInstall = (e) => {
+      e.preventDefault()
+      window.deferredPrompt = e
+      setInstallAvailable(true)
+    }
+
+    const onAppInstalled = () => {
+      window.deferredPrompt = null
+      setInstallAvailable(false)
+    }
+
+    window.addEventListener('beforeinstallprompt', readyForInstall)
+    window.addEventListener('appinstalled', onAppInstalled)
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
+    if (isStandalone) {
+      setInstallAvailable(false)
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', readyForInstall)
+      window.removeEventListener('appinstalled', onAppInstalled)
+    }
   }, [])
 
   const handleSignOut = async () => {
@@ -62,16 +85,17 @@ export default function Layout({ children }) {
             </div>
             <div className="flex items-center gap-4">
               {/* PWA Install Button */}
-              <button
-                id="pwa-install-btn"
-                onClick={handleInstallPWA}
-                className="hidden items-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 py-2 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all shadow-md hover:shadow-lg text-sm font-medium"
-                style={{ display: 'none' }}
-              >
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Install App</span>
-                <span className="sm:hidden">Install</span>
-              </button>
+              {installAvailable && (
+                <button
+                  id="pwa-install-btn"
+                  onClick={handleInstallPWA}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 py-2 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all shadow-md hover:shadow-lg text-sm font-medium"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Install App</span>
+                  <span className="sm:hidden">Install</span>
+                </button>
+              )}
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
                 <User className="w-4 h-4" />
                 <div className="flex flex-col">
