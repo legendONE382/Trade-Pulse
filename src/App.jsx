@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
+import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import Sales from './pages/Sales'
 import Expenses from './pages/Expenses'
@@ -21,17 +22,11 @@ function App() {
         <ErrorBoundary>
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<Landing />} />
             <Route path="/signin" element={<Signin />} />
             <Route path="/signup" element={<Signup />} />
             
             {/* Protected Routes */}
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            } />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Layout>
@@ -90,7 +85,7 @@ function App() {
             } />
             
             {/* Default redirect */}
-            <Route path="*" element={<Navigate to="/signin" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ErrorBoundary>
       </AuthProvider>
