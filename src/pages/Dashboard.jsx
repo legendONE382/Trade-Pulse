@@ -109,6 +109,10 @@ export default function Dashboard() {
           color="text-red-600"
           trend="down"
           trendValue={`Today: ${formatCurrency(stats.todayExpenses)}`}
+          {isCurrency !== false
+           ? formatCurrency(value)
+           : value
+}
         />
         <StatCard
           title="Net Profit"
@@ -121,6 +125,8 @@ export default function Dashboard() {
           value={stats.totalCustomers}
           icon={Users}
           color="text-blue-600"
+          isCurrency={false}
+
         />
         <StatCard
           title="Pending Debts"
