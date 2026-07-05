@@ -63,12 +63,14 @@ export default function Dashboard() {
     setRecentExpenses(expenses.slice(-5).reverse())
   }
 
-  const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
+  const StatCard = ({ title, value, icon: Icon, trend, trendValue, color, isCurrency = true }) => (
     <div className="card">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className={`text-2xl font-bold mt-1 ${color}`}>{formatCurrency(value)}</p>
+          <p className={`text-2xl font-bold mt-1 ${color}`}>
+            {isCurrency ? formatCurrency(value) : value}
+          </p>
           {trend && (
             <div className={`flex items-center gap-1 mt-2 text-sm ${
               trend === 'up' ? 'text-green-600' : 'text-red-600'
@@ -109,10 +111,6 @@ export default function Dashboard() {
           color="text-red-600"
           trend="down"
           trendValue={`Today: ${formatCurrency(stats.todayExpenses)}`}
-          {isCurrency !== false
-           ? formatCurrency(value)
-           : value
-}
         />
         <StatCard
           title="Net Profit"
@@ -126,7 +124,6 @@ export default function Dashboard() {
           icon={Users}
           color="text-blue-600"
           isCurrency={false}
-
         />
         <StatCard
           title="Pending Debts"

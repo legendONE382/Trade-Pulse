@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Check, X, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Check, X, Pencil, Trash2, Clock, CheckCircle } from 'lucide-react'
 import { getDebts, addDebt, updateDebt, deleteDebt, getCustomers, formatCurrency, formatDate } from '../utils/supabaseStorage'
 
 export default function Debts() {
@@ -178,18 +178,18 @@ export default function Debts() {
         ) : (
           <div className="space-y-3">
             {pendingDebts.map((debt) => (
-              <div key={debt.id} className="card flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
+              <div key={debt.id} className="card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-semibold text-gray-900">{getCustomerName(debt.customer_id)}</p>
-                    <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                    <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full whitespace-nowrap">
                       Pending
                     </span>
                   </div>
                   {debt.description && (
                     <p className="text-sm text-gray-600 mt-1">{debt.description}</p>
                   )}
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-500">
                     <span className="font-semibold text-orange-600">
                       {formatCurrency(debt.amount)}
                     </span>
@@ -198,18 +198,18 @@ export default function Debts() {
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => handleMarkPaid(debt.id)}
-                    className="btn-primary flex items-center gap-1"
+                    className="btn-primary flex items-center justify-center gap-1 flex-1 sm:flex-none"
                     title="Mark as paid"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Paid
+                    <span className="hidden sm:inline">Paid</span>
                   </button>
                   <button
                     onClick={() => handleDelete(debt.id)}
-                    className="text-red-600 hover:text-red-800 p-2"
+                    className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -230,18 +230,18 @@ export default function Debts() {
           </h3>
           <div className="space-y-3">
             {paidDebts.map((debt) => (
-              <div key={debt.id} className="card flex items-center justify-between opacity-75">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
+              <div key={debt.id} className="card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 opacity-75">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-semibold text-gray-900">{getCustomerName(debt.customer_id)}</p>
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full whitespace-nowrap">
                       Paid
                     </span>
                   </div>
                   {debt.description && (
                     <p className="text-sm text-gray-600 mt-1">{debt.description}</p>
                   )}
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-500">
                     <span className="font-semibold text-green-600">
                       {formatCurrency(debt.amount)}
                     </span>
@@ -252,7 +252,8 @@ export default function Debts() {
                 </div>
                 <button
                   onClick={() => handleDelete(debt.id)}
-                  className="text-red-600 hover:text-red-800 p-2"
+                  className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors w-full sm:w-auto"
+                  title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

@@ -8,9 +8,26 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check active session
+    // Check if user is already stored in localStorage
+    const storedUser = localStorage.getItem('tradepulse_user')
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+      } catch (e) {
+        console.error('Failed to parse stored user:', e)
+      }
+    }
+
+    // Check active session from Supabase
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      // Persist user to localStorage
+      if (currentUser) {
+        localStorage.setItem('tradepulse_user', JSON.stringify(currentUser))
+      } else {
+        localStorage.removeItem('tradepulse_user')
+      }
       setLoading(false)
     })
 
@@ -18,7 +35,14 @@ export function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      // Persist user to localStorage
+      if (currentUser) {
+        localStorage.setItem('tradepulse_user', JSON.stringify(currentUser))
+      } else {
+        localStorage.removeItem('tradepulse_user')
+      }
       setLoading(false)
     })
 
@@ -46,6 +70,7 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
+    localStorage.removeItem('tradepulse_user')
     const { error } = await supabase.auth.signOut()
     return { error }
   }
