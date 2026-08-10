@@ -14,7 +14,8 @@ import {
   Menu,
   X,
   Download,
-  ShoppingBag
+  ShoppingBag,
+  Bot
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -28,6 +29,7 @@ const navItems = [
   { path: '/debts', label: 'Debts', icon: DollarSign },
   { path: '/invoices', label: 'Invoices', icon: FileText },
   { path: '/reminders', label: 'Reminders', icon: Bell },
+  { path: '/ai', label: 'AI Assistant', icon: Bot },
 ]
 
 export default function Layout({ children }) {

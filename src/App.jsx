@@ -13,6 +13,7 @@ import Invoices from './pages/Invoices'
 import Reminders from './pages/Reminders'
 import Products from './pages/Products'
 import Orders from './pages/Orders'
+import AIAssistant from './pages/AIAssistant'
 import Signin from './pages/Signin'
 import Signup from './pages/Signup'
 
@@ -91,7 +92,14 @@ function App() {
                 </Layout>
               </ProtectedRoute>
             } />
-            
+            <Route path="/ai" element={
+              <ProtectedRoute>
+                <Layout>
+                  <AIAssistant />
+                </Layout>
+              </ProtectedRoute>
+            } />
+
             {/* Default redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
