@@ -1,63 +1,47 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Search } from 'lucide-react'
-import { getExpenses, addExpense, updateExpense, deleteExpense, formatCurrency, formatDate } from '../utils/supabaseStorage'
+import { useState } from 'react'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
+import useAsyncData from '../hooks/useAsyncData'
+import useForm from '../hooks/useForm'
+import { expensesService } from '../services/expensesService'
+import { formatCurrency, formatDate } from '../utils/supabaseStorage'
+import { PageHeader, Button, Modal, EmptyState, ConfirmDialog, LoadingSpinner } from '../components/ui'
+
+const CATEGORIES = [
+  'Inventory',
+  'Rent',
+  'Utilities',
+  'Transportation',
+  'Marketing',
+  'Equipment',
+  'Salary',
+  'Other',
+]
+
+const EMPTY_FORM = {
+  description: '',
+  amount: '',
+  category: '',
+  date: new Date().toISOString().split('T')[0],
+}
 
 export default function Expenses() {
-  const [expenses, setExpenses] = useState([])
+  const { data: expenses, loading, error, reload } = useAsyncData(expensesService.list)
+  const form = useForm(EMPTY_FORM)
+
   const [showForm, setShowForm] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
-  const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    category: '',
-    date: new Date().toISOString().split('T')[0],
-  })
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
-    loadExpenses()
-  }, [])
-
-  const loadExpenses = async () => {
-    const data = await getExpenses()
-    setExpenses(data)
+  const openCreate = () => {
+    setEditingExpense(null)
+    form.reset()
+    setShowForm(true)
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (editingExpense) {
-      await updateExpense(editingExpense.id, {
-        ...formData,
-        amount: parseFloat(formData.amount),
-      })
-      setEditingExpense(null)
-    } else {
-      await addExpense({
-        ...formData,
-        amount: parseFloat(formData.amount),
-      })
-    }
-
-    setFormData({
-      description: '',
-      amount: '',
-      category: '',
-      date: new Date().toISOString().split('T')[0],
-    })
-    setShowForm(false)
-    loadExpenses()
-  }
-
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this expense?')) {
-      await deleteExpense(id)
-      loadExpenses()
-    }
-  }
-
-  const handleEdit = (expense) => {
+  const openEdit = (expense) => {
     setEditingExpense(expense)
-    setFormData({
+    form.setValues({
       description: expense.description,
       amount: expense.amount,
       category: expense.category || '',
@@ -66,129 +50,146 @@ export default function Expenses() {
     setShowForm(true)
   }
 
-  const categories = [
-    'Inventory',
-    'Rent',
-    'Utilities',
-    'Transportation',
-    'Marketing',
-    'Equipment',
-    'Salary',
-    'Other',
-  ]
+  const closeForm = () => {
+    setShowForm(false)
+    setEditingExpense(null)
+    form.reset()
+  }
+
+  const handleSubmit = form.handleSubmit(async (values) => {
+    const payload = { ...values, amount: parseFloat(values.amount) }
+    if (editingExpense) {
+      await expensesService.update(editingExpense.id, payload)
+    } else {
+      await expensesService.create(payload)
+    }
+    closeForm()
+    reload()
+  })
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await expensesService.remove(deleteTarget.id)
+      setDeleteTarget(null)
+      reload()
+    } catch (err) {
+      console.error('Delete failed:', err)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  if (loading) return <LoadingSpinner className="mt-12" />
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Expenses</h2>
-          <p className="text-gray-600 mt-1">Track all your business expenses</p>
-        </div>
-        <button
-          onClick={() => {
-            setEditingExpense(null)
-            setFormData({
-              description: '',
-              amount: '',
-              category: '',
-              date: new Date().toISOString().split('T')[0],
-            })
-            setShowForm(!showForm)
-          }}
-          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
-        >
-          <Plus className="w-5 h-5" />
-          Add Expense
-        </button>
-      </div>
+      <PageHeader
+        title="Expenses"
+        description="Track all your business expenses"
+        action={
+          <Button icon={Plus} onClick={openCreate} className="w-full sm:w-auto">
+            Add Expense
+          </Button>
+        }
+      />
 
-      {showForm && (
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {editingExpense ? 'Edit Expense' : 'Add New Expense'}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="input-field"
-                placeholder="What was this expense for?"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount
-              </label>
-              <input
-                type="number"
-                required
-                step="0.01"
-                min="0"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="input-field"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="input-field"
-              >
-                <option value="">Select category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="input-field"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button type="submit" className="btn-primary flex-1">
-                {editingExpense ? 'Update Expense' : 'Add Expense'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false)
-                  setEditingExpense(null)
-                }}
-                className="btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
         </div>
       )}
 
-      {expenses.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-gray-500">No expenses recorded yet</p>
-          <p className="text-sm text-gray-400 mt-2">Click "Add Expense" to get started</p>
+      {form.error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {form.error}
         </div>
+      )}
+
+      <Modal
+        isOpen={showForm}
+        onClose={closeForm}
+        title={editingExpense ? 'Edit Expense' : 'Add New Expense'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <input
+              type="text"
+              required
+              value={form.values.description}
+              onChange={(e) => form.setValue('description', e.target.value)}
+              className="input-field"
+              placeholder="What was this expense for?"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <input
+              type="number"
+              required
+              step="0.01"
+              min="0"
+              value={form.values.amount}
+              onChange={(e) => form.setValue('amount', e.target.value)}
+              className="input-field"
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <select
+              value={form.values.category}
+              onChange={(e) => form.setValue('category', e.target.value)}
+              className="input-field"
+            >
+              <option value="">Select category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input
+              type="date"
+              required
+              value={form.values.date}
+              onChange={(e) => form.setValue('date', e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" loading={form.isSubmitting} className="flex-1">
+              {editingExpense ? 'Update Expense' : 'Add Expense'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={closeForm} className="flex-1">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Expense"
+        message={`Are you sure you want to delete "${deleteTarget?.description}"? This action cannot be undone.`}
+        loading={deleting}
+      />
+
+      {!error && expenses.length === 0 ? (
+        <EmptyState
+          title="No expenses recorded yet"
+          description='Click "Add Expense" to get started'
+          action={
+            <Button icon={Plus} onClick={openCreate}>
+              Add Expense
+            </Button>
+          }
+        />
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
@@ -213,7 +214,7 @@ export default function Expenses() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {expenses.slice().reverse().map((expense) => (
+                {expenses.map((expense) => (
                   <tr key={expense.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {expense.description}
@@ -229,13 +230,13 @@ export default function Expenses() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => handleEdit(expense)}
+                        onClick={() => openEdit(expense)}
                         className="text-blue-600 hover:text-blue-800 mr-3"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(expense.id)}
+                        onClick={() => setDeleteTarget(expense)}
                         className="text-red-600 hover:text-red-800"
                       >
                         <Trash2 className="w-4 h-4" />

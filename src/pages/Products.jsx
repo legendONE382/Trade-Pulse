@@ -1,151 +1,136 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Search, Package, AlertTriangle } from 'lucide-react'
-import { getProducts, addProduct, updateProduct, deleteProduct, formatCurrency } from '../utils/supabaseStorage'
+import { useState } from 'react'
+import { Plus, Pencil, Trash2, Package, AlertTriangle } from 'lucide-react'
+import { productsService } from '../services/productsService'
+import { formatCurrency } from '../utils/supabaseStorage'
+import useAsyncData from '../hooks/useAsyncData'
+import useForm from '../hooks/useForm'
+import { PageHeader, Button, Modal, EmptyState, ConfirmDialog, Badge, LoadingSpinner } from '../components/ui'
+
+const INITIAL_FORM = {
+  name: '',
+  barcode: '',
+  sku: '',
+  category: '',
+  price: '',
+  cost: '',
+  stock: '',
+  min_stock: '5',
+  description: '',
+}
+
+const CATEGORIES = [
+  'Electronics',
+  'Food & Beverages',
+  'Clothing',
+  'Home & Garden',
+  'Health & Beauty',
+  'Auto Parts',
+  'Office Supplies',
+  'Other',
+]
 
 export default function Products() {
-  const [products, setProducts] = useState([])
+  const { data: products, loading, error, reload, setData: setProducts } = useAsyncData(productsService.list)
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
-  const [formData, setFormData] = useState({
-    name: '',
-    barcode: '',
-    sku: '',
-    category: '',
-    price: '',
-    cost: '',
-    stock: '',
-    min_stock: '5',
-    description: '',
-  })
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const { values: form, setValue, reset: resetForm, isSubmitting, error: formError, setError: setFormError, handleSubmit } = useForm(INITIAL_FORM)
 
-  useEffect(() => {
-    loadProducts()
-  }, [])
+  const lowStockProducts = products.filter(p => p.stock <= p.min_stock)
+  const totalStockValue = products.reduce((sum, p) => sum + (p.stock * p.cost), 0)
 
-  const loadProducts = async () => {
-    const data = await getProducts()
-    setProducts(data)
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (editingProduct) {
-      await updateProduct(editingProduct.id, {
-        ...formData,
-        price: parseFloat(formData.price),
-        cost: parseFloat(formData.cost),
-        stock: parseInt(formData.stock),
-        min_stock: parseInt(formData.min_stock),
-      })
-      setEditingProduct(null)
-    } else {
-      await addProduct({
-        ...formData,
-        price: parseFloat(formData.price),
-        cost: parseFloat(formData.cost),
-        stock: parseInt(formData.stock),
-        min_stock: parseInt(formData.min_stock),
-      })
-    }
-
-    setFormData({
-      name: '',
-      barcode: '',
-      sku: '',
-      category: '',
-      price: '',
-      cost: '',
-      stock: '',
-      min_stock: '5',
-      description: '',
-    })
-    setShowForm(false)
-    loadProducts()
-  }
-
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      await deleteProduct(id)
-      loadProducts()
-    }
-  }
-
-  const handleEdit = (product) => {
-    setEditingProduct(product)
-    setFormData({
-      name: product.name,
-      barcode: product.barcode || '',
-      sku: product.sku || '',
-      category: product.category || '',
-      price: product.price,
-      cost: product.cost || '',
-      stock: product.stock,
-      min_stock: product.min_stock || '5',
-      description: product.description || '',
-    })
+  const openAddForm = () => {
+    setEditingProduct(null)
+    resetForm()
     setShowForm(true)
+  }
+
+  const openEditForm = (product) => {
+    setEditingProduct(product)
+    setValues(product)
+    setShowForm(true)
+  }
+
+  const setValues = (product) => {
+    Object.entries(INITIAL_FORM).forEach(([key]) => {
+      setValue(key, product[key] ?? (key === 'min_stock' ? '5' : ''))
+    })
+  }
+
+  const onSubmit = async (values) => {
+    const payload = {
+      ...values,
+      price: parseFloat(values.price),
+      cost: parseFloat(values.cost),
+      stock: parseInt(values.stock),
+      min_stock: parseInt(values.min_stock),
+    }
+
+    if (editingProduct) {
+      await productsService.update(editingProduct.id, payload)
+    } else {
+      await productsService.create(payload)
+    }
+
+    setEditingProduct(null)
+    setShowForm(false)
+    reload()
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await productsService.remove(deleteTarget.id)
+      setDeleteTarget(null)
+      reload()
+    } catch {
+      setFormError('Failed to delete product')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const adjustStock = async (id, adjustment) => {
     const product = products.find(p => p.id === id)
-    if (product) {
-      const newStock = Math.max(0, product.stock + adjustment)
-      await updateProduct(id, { stock: newStock })
-      loadProducts()
+    if (!product) return
+    const newStock = Math.max(0, product.stock + adjustment)
+    try {
+      await productsService.update(id, { stock: newStock })
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, stock: newStock } : p))
+    } catch {
+      setFormError('Failed to update stock')
     }
   }
 
-  const getLowStockProducts = () => {
-    return products.filter(p => p.stock <= p.min_stock)
+  if (loading) {
+    return <LoadingSpinner className="py-20" />
   }
 
-  const getTotalStockValue = () => {
-    return products.reduce((sum, p) => sum + (p.stock * p.cost), 0)
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Products & Inventory" description="Manage your product catalog and stock levels" />
+        <div className="card p-6 text-center">
+          <p className="text-red-600 font-medium">{error}</p>
+          <Button onClick={reload} className="mt-4">Retry</Button>
+        </div>
+      </div>
+    )
   }
-
-  const categories = [
-    'Electronics',
-    'Food & Beverages',
-    'Clothing',
-    'Home & Garden',
-    'Health & Beauty',
-    'Auto Parts',
-    'Office Supplies',
-    'Other',
-  ]
-
-  const lowStockProducts = getLowStockProducts()
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Products & Inventory</h2>
-          <p className="text-gray-600 mt-1">Manage your product catalog and stock levels</p>
-        </div>
-        <button
-          onClick={() => {
-            setEditingProduct(null)
-            setFormData({
-              name: '',
-              barcode: '',
-              sku: '',
-              category: '',
-              price: '',
-              cost: '',
-              stock: '',
-              min_stock: '5',
-              description: '',
-            })
-            setShowForm(!showForm)
-          }}
-          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
-        >
-          <Plus className="w-5 h-5" />
-          Add Product
-        </button>
-      </div>
+      <PageHeader
+        title="Products & Inventory"
+        description="Manage your product catalog and stock levels"
+        action={
+          <Button icon={Plus} onClick={openAddForm} className="w-full sm:w-auto">
+            Add Product
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -178,7 +163,7 @@ export default function Products() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Stock Value</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(getTotalStockValue())}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalStockValue)}</p>
             </div>
           </div>
         </div>
@@ -204,159 +189,154 @@ export default function Products() {
         </div>
       )}
 
-      {showForm && (
-        <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {editingProduct ? 'Edit Product' : 'Add New Product'}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="input-field"
-                  placeholder="Product name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Barcode
-                </label>
-                <input
-                  type="text"
-                  value={formData.barcode}
-                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                  className="input-field"
-                  placeholder="Scan or enter barcode"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  SKU
-                </label>
-                <input
-                  type="text"
-                  value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  className="input-field"
-                  placeholder="Stock keeping unit"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="input-field"
-                >
-                  <option value="">Select category</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Selling Price *
-                </label>
-                <input
-                  type="number"
-                  required
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="input-field"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cost Price
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.cost}
-                  onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                  className="input-field"
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock Quantity *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  className="input-field"
-                  placeholder="0"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Minimum Stock Alert
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.min_stock}
-                  onChange={(e) => setFormData({ ...formData, min_stock: e.target.value })}
-                  className="input-field"
-                  placeholder="5"
-                />
-              </div>
-            </div>
+      {/* Add/Edit Form Modal */}
+      <Modal
+        isOpen={showForm}
+        onClose={() => { setShowForm(false); setEditingProduct(null) }}
+        title={editingProduct ? 'Edit Product' : 'Add New Product'}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {formError && (
+            <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">{formError}</p>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+              <input
+                type="text"
+                required
+                value={form.name}
+                onChange={(e) => setValue('name', e.target.value)}
                 className="input-field"
-                rows={3}
-                placeholder="Product description"
+                placeholder="Product name"
               />
             </div>
-            <div className="flex gap-3">
-              <button type="submit" className="btn-primary flex-1">
-                {editingProduct ? 'Update Product' : 'Add Product'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false)
-                  setEditingProduct(null)
-                }}
-                className="btn-secondary flex-1"
-              >
-                Cancel
-              </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
+              <input
+                type="text"
+                value={form.barcode}
+                onChange={(e) => setValue('barcode', e.target.value)}
+                className="input-field"
+                placeholder="Scan or enter barcode"
+              />
             </div>
-          </form>
-        </div>
-      )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+              <input
+                type="text"
+                value={form.sku}
+                onChange={(e) => setValue('sku', e.target.value)}
+                className="input-field"
+                placeholder="Stock keeping unit"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={form.category}
+                onChange={(e) => setValue('category', e.target.value)}
+                className="input-field"
+              >
+                <option value="">Select category</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price *</label>
+              <input
+                type="number"
+                required
+                step="0.01"
+                min="0"
+                value={form.price}
+                onChange={(e) => setValue('price', e.target.value)}
+                className="input-field"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.cost}
+                onChange={(e) => setValue('cost', e.target.value)}
+                className="input-field"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                value={form.stock}
+                onChange={(e) => setValue('stock', e.target.value)}
+                className="input-field"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Stock Alert</label>
+              <input
+                type="number"
+                min="0"
+                value={form.min_stock}
+                onChange={(e) => setValue('min_stock', e.target.value)}
+                className="input-field"
+                placeholder="5"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setValue('description', e.target.value)}
+              className="input-field"
+              rows={3}
+              placeholder="Product description"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" loading={isSubmitting} className="flex-1">
+              {editingProduct ? 'Update Product' : 'Add Product'}
+            </Button>
+            <Button variant="secondary" onClick={() => { setShowForm(false); setEditingProduct(null) }} className="flex-1">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleting}
+      />
+
+      {/* Products Table */}
       {products.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-gray-500">No products added yet</p>
-          <p className="text-sm text-gray-400 mt-2">Click "Add Product" to get started</p>
+        <div className="card">
+          <EmptyState
+            icon={Package}
+            title="No products yet"
+            description="Add your first product to start managing inventory"
+            action={
+              <Button icon={Plus} onClick={openAddForm}>Add Product</Button>
+            }
+          />
         </div>
       ) : (
         <div className="card overflow-hidden">
@@ -364,24 +344,12 @@ export default function Products() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -390,12 +358,8 @@ export default function Products() {
                     <td className="px-6 py-4">
                       <div>
                         <p className="font-medium text-gray-900">{product.name}</p>
-                        {product.barcode && (
-                          <p className="text-sm text-gray-500">Barcode: {product.barcode}</p>
-                        )}
-                        {product.sku && (
-                          <p className="text-sm text-gray-500">SKU: {product.sku}</p>
-                        )}
+                        {product.barcode && <p className="text-sm text-gray-500">Barcode: {product.barcode}</p>}
+                        {product.sku && <p className="text-sm text-gray-500">SKU: {product.sku}</p>}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -406,55 +370,27 @@ export default function Products() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span className={`font-semibold ${
-                          product.stock <= product.min_stock ? 'text-red-600' : 'text-gray-900'
-                        }`}>
+                        <span className={`font-semibold ${product.stock <= product.min_stock ? 'text-red-600' : 'text-gray-900'}`}>
                           {product.stock}
                         </span>
                         <div className="flex gap-1">
-                          <button
-                            onClick={() => adjustStock(product.id, -1)}
-                            className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold"
-                          >
-                            -
-                          </button>
-                          <button
-                            onClick={() => adjustStock(product.id, 1)}
-                            className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold"
-                          >
-                            +
-                          </button>
+                          <Button size="sm" variant="ghost" onClick={() => adjustStock(product.id, -1)} className="px-2 py-0.5 text-xs">-</Button>
+                          <Button size="sm" variant="ghost" onClick={() => adjustStock(product.id, 1)} className="px-2 py-0.5 text-xs">+</Button>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {product.stock === 0 ? (
-                        <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                          Out of Stock
-                        </span>
-                      ) : product.stock <= product.min_stock ? (
-                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
-                          Low Stock
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                          In Stock
-                        </span>
-                      )}
+                      <Badge variant={product.stock === 0 ? 'danger' : product.stock <= product.min_stock ? 'warning' : 'success'}>
+                        {product.stock === 0 ? 'Out of Stock' : product.stock <= product.min_stock ? 'Low Stock' : 'In Stock'}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => openEditForm(product)}>
                         <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(product)} className="text-red-600 hover:text-red-800">
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}

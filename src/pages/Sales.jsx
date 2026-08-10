@@ -1,88 +1,38 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Search } from 'lucide-react'
-import { getSales, addSale, updateSale, deleteSale, getCustomers, formatCurrency, formatDate } from '../utils/supabaseStorage'
+import { useState } from 'react'
+import { Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react'
+import useAsyncData from '../hooks/useAsyncData'
+import useForm from '../hooks/useForm'
+import { salesService } from '../services/salesService'
+import { customersService } from '../services/customersService'
+import { formatCurrency, formatDate } from '../utils/supabaseStorage'
+import { PageHeader, Button, Modal, EmptyState, ConfirmDialog, Badge, LoadingSpinner } from '../components/ui'
+
+const initialFormValues = {
+  description: '',
+  amount: '',
+  customer_id: '',
+  date: new Date().toISOString().split('T')[0],
+}
 
 export default function Sales() {
-  const [sales, setSales] = useState([])
+  const sales = useAsyncData(() => salesService.list())
+  const customers = useAsyncData(() => customersService.list())
+
+  const form = useForm(initialFormValues)
   const [showForm, setShowForm] = useState(false)
   const [editingSale, setEditingSale] = useState(null)
-  const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    customer_id: '',
-    date: new Date().toISOString().split('T')[0],
-  })
-  const [customers, setCustomers] = useState([])
-  const [submitError, setSubmitError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  useEffect(() => {
-    loadSales()
-    loadCustomers()
-  }, [])
-
-  const loadSales = async () => {
-    const data = await getSales()
-    setSales(data)
+  const openCreate = () => {
+    setEditingSale(null)
+    form.reset()
+    setShowForm(true)
   }
 
-  const loadCustomers = async () => {
-    const data = await getCustomers()
-    setCustomers(data)
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSubmitError('')
-    setIsSubmitting(true)
-
-    try {
-      let result
-      if (editingSale) {
-        result = await updateSale(editingSale.id, {
-          ...formData,
-          amount: parseFloat(formData.amount),
-        })
-        if (!result) {
-          throw new Error('Unable to update sale. Please try again.')
-        }
-        setEditingSale(null)
-      } else {
-        result = await addSale({
-          ...formData,
-          amount: parseFloat(formData.amount),
-        })
-        if (!result) {
-          throw new Error('Unable to add sale. Please check your values and try again.')
-        }
-      }
-
-      setFormData({
-        description: '',
-        amount: '',
-        customer_id: '',
-        date: new Date().toISOString().split('T')[0],
-      })
-      setShowForm(false)
-      loadSales()
-    } catch (error) {
-      console.error('Sale submit error:', error)
-      setSubmitError(error?.message || 'An unexpected error occurred while saving the sale.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this sale?')) {
-      await deleteSale(id)
-      loadSales()
-    }
-  }
-
-  const handleEdit = (sale) => {
+  const openEdit = (sale) => {
     setEditingSale(sale)
-    setFormData({
+    form.setValues({
       description: sale.description,
       amount: sale.amount,
       customer_id: sale.customer_id || '',
@@ -91,133 +41,78 @@ export default function Sales() {
     setShowForm(true)
   }
 
+  const closeModal = () => {
+    setShowForm(false)
+    setEditingSale(null)
+    form.reset()
+  }
+
+  const handleSubmit = form.handleSubmit(async (values) => {
+    const payload = { ...values, amount: parseFloat(values.amount) }
+    if (editingSale) {
+      await salesService.update(editingSale.id, payload)
+    } else {
+      await salesService.create(payload)
+    }
+    closeModal()
+    sales.reload()
+  })
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    try {
+      await salesService.remove(deleteTarget.id)
+      setDeleteTarget(null)
+      sales.reload()
+    } catch {
+      setDeleteTarget(null)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const getCustomerName = (customerId) => {
-    const customer = customers.find(c => c.id === customerId)
+    const customer = customers.data.find((c) => c.id === customerId)
     return customer ? customer.name : 'Walk-in'
+  }
+
+  if (sales.loading || customers.loading) {
+    return <LoadingSpinner size="lg" className="mt-12" />
+  }
+
+  if (sales.error || customers.error) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {sales.error || customers.error}
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Sales</h2>
-          <p className="text-gray-600 mt-1">Track all your sales</p>
-        </div>
-        <button
-          onClick={() => {
-            setEditingSale(null)
-            setFormData({
-              description: '',
-              amount: '',
-              customer_id: '',
-              date: new Date().toISOString().split('T')[0],
-            })
-            setShowForm(!showForm)
-          }}
-          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center"
-        >
-          <Plus className="w-5 h-5" />
-          Add Sale
-        </button>
-      </div>
+      <PageHeader
+        title="Sales"
+        description="Track all your sales"
+        action={
+          <Button icon={Plus} onClick={openCreate} className="w-full sm:w-auto">
+            Add Sale
+          </Button>
+        }
+      />
 
-      {showForm && (
+      {sales.data.length === 0 ? (
         <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {editingSale ? 'Edit Sale' : 'Add New Sale'}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="input-field"
-                placeholder="What did you sell?"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount
-              </label>
-              <input
-                type="number"
-                required
-                step="0.01"
-                min="0"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="input-field"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Customer (Optional)
-              </label>
-              <select
-                value={formData.customer_id}
-                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                className="input-field"
-              >
-                <option value="">Walk-in Customer</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="input-field"
-              />
-            </div>
-            {submitError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {submitError}
-              </div>
-            )}
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`btn-primary flex-1 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isSubmitting ? 'Saving...' : editingSale ? 'Update Sale' : 'Add Sale'}
-              </button>
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={() => {
-                  if (isSubmitting) return
-                  setShowForm(false)
-                  setEditingSale(null)
-                }}
-                className="btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {sales.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-gray-500">No sales recorded yet</p>
-          <p className="text-sm text-gray-400 mt-2">Click "Add Sale" to get started</p>
+          <EmptyState
+            icon={ShoppingBag}
+            title="No sales recorded yet"
+            description='Click "Add Sale" to get started'
+            action={
+              <Button icon={Plus} onClick={openCreate}>
+                Add Sale
+              </Button>
+            }
+          />
         </div>
       ) : (
         <div className="card overflow-hidden">
@@ -243,7 +138,7 @@ export default function Sales() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sales.slice().reverse().map((sale) => (
+                {sales.data.map((sale) => (
                   <tr key={sale.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {sale.description}
@@ -251,25 +146,19 @@ export default function Sales() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {getCustomerName(sale.customer_id)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                      {formatCurrency(sale.amount)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Badge variant="success">{formatCurrency(sale.amount)}</Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(sale.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(sale)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(sale)} className="mr-1">
                         <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(sale.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(sale)}>
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -278,6 +167,83 @@ export default function Sales() {
           </div>
         </div>
       )}
+
+      <Modal isOpen={showForm} onClose={closeModal} title={editingSale ? 'Edit Sale' : 'Add New Sale'}>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <input
+              type="text"
+              required
+              value={form.values.description}
+              onChange={(e) => form.setValue('description', e.target.value)}
+              className="input-field"
+              placeholder="What did you sell?"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+            <input
+              type="number"
+              required
+              step="0.01"
+              min="0"
+              value={form.values.amount}
+              onChange={(e) => form.setValue('amount', e.target.value)}
+              className="input-field"
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Customer (Optional)</label>
+            <select
+              value={form.values.customer_id}
+              onChange={(e) => form.setValue('customer_id', e.target.value)}
+              className="input-field"
+            >
+              <option value="">Walk-in Customer</option>
+              {customers.data.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input
+              type="date"
+              required
+              value={form.values.date}
+              onChange={(e) => form.setValue('date', e.target.value)}
+              className="input-field"
+            />
+          </div>
+          {form.error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {form.error}
+            </div>
+          )}
+          <div className="flex gap-3">
+            <Button type="submit" loading={form.isSubmitting} className="flex-1">
+              {editingSale ? 'Update Sale' : 'Add Sale'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={closeModal} disabled={form.isSubmitting} className="flex-1">
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        title="Delete Sale"
+        message="Are you sure you want to delete this sale? This action cannot be undone."
+        confirmLabel="Delete"
+        loading={isDeleting}
+      />
     </div>
   )
 }
