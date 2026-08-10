@@ -12,6 +12,7 @@ import Debts from './pages/Debts'
 import Invoices from './pages/Invoices'
 import Reminders from './pages/Reminders'
 import Products from './pages/Products'
+import Orders from './pages/Orders'
 import Signin from './pages/Signin'
 import Signup from './pages/Signup'
 
@@ -80,6 +81,13 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Products />
+                </Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <Layout>
+                  <Orders />
                 </Layout>
               </ProtectedRoute>
             } />

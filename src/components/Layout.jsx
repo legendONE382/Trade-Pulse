@@ -13,7 +13,8 @@ import {
   User,
   Menu,
   X,
-  Download
+  Download,
+  ShoppingBag
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -23,6 +24,7 @@ const navItems = [
   { path: '/expenses', label: 'Expenses', icon: Receipt },
   { path: '/customers', label: 'Customers', icon: Users },
   { path: '/products', label: 'Products', icon: Package },
+  { path: '/orders', label: 'Orders', icon: ShoppingBag },
   { path: '/debts', label: 'Debts', icon: DollarSign },
   { path: '/invoices', label: 'Invoices', icon: FileText },
   { path: '/reminders', label: 'Reminders', icon: Bell },
