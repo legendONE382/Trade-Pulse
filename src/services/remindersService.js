@@ -14,7 +14,10 @@ export const remindersService = {
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: true })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching reminders:', error)
+      return []
+    }
     return data || []
   },
 

@@ -14,7 +14,10 @@ export const expensesService = {
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching expenses:', error)
+      return []
+    }
     return data || []
   },
 

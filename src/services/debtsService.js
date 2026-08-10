@@ -14,7 +14,10 @@ export const debtsService = {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching debts:', error)
+      return []
+    }
     return data || []
   },
 
@@ -27,7 +30,10 @@ export const debtsService = {
       .eq('user_id', userId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching pending debts:', error)
+      return []
+    }
     return data || []
   },
 
@@ -40,7 +46,10 @@ export const debtsService = {
       .eq('user_id', userId)
       .eq('status', 'paid')
       .order('created_at', { ascending: false })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching paid debts:', error)
+      return []
+    }
     return data || []
   },
 

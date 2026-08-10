@@ -18,7 +18,10 @@ export const inventoryService = {
       .order('created_at', { ascending: false })
     if (productId) query = query.eq('product_id', productId)
     const { data, error } = await query
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching inventory:', error)
+      return []
+    }
     return data || []
   },
 

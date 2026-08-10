@@ -14,7 +14,10 @@ export const productsService = {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching products:', error)
+      return []
+    }
     return data || []
   },
 

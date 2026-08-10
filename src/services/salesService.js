@@ -14,7 +14,10 @@ export const salesService = {
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false })
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching sales:', error)
+      return []
+    }
     return data || []
   },
 

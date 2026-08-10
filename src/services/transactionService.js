@@ -20,7 +20,10 @@ export const transactionService = {
     if (filters.from) query = query.gte('date', filters.from)
     if (filters.to) query = query.lte('date', filters.to)
     const { data, error } = await query
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching transactions:', error)
+      return []
+    }
     return data || []
   },
 
