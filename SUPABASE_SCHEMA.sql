@@ -1,36 +1,37 @@
 -- TradePulse Supabase Database Schema
 -- Run this in your Supabase SQL Editor to create the necessary tables
+-- This schema is designed to work with TEXT IDs generated client-side
 
--- Enable RLS (Row Level Security)
+-- Enable RLS (Row Level Security) on auth.users
 ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
 
 -- Sales Table
 CREATE TABLE IF NOT EXISTS sales (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   description TEXT NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
-  customer_id UUID,
-  date TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  customer_id TEXT,
+  date DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 -- Expenses Table
 CREATE TABLE IF NOT EXISTS expenses (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   description TEXT NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
   category TEXT,
-  date TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  date DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 -- Customers Table
 CREATE TABLE IF NOT EXISTS customers (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   phone TEXT,
@@ -42,45 +43,49 @@ CREATE TABLE IF NOT EXISTS customers (
 
 -- Debts Table
 CREATE TABLE IF NOT EXISTS debts (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+  customer_id TEXT NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
   description TEXT,
-  due_date TIMESTAMP WITH TIME ZONE,
+  due_date DATE,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
+  paid_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 -- Invoices Table
 CREATE TABLE IF NOT EXISTS invoices (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+  customer_id TEXT NOT NULL,
   items JSONB NOT NULL,
+  total DECIMAL(10, 2) NOT NULL,
   notes TEXT,
-  due_date TIMESTAMP WITH TIME ZONE,
+  due_date DATE,
+  status TEXT DEFAULT 'pending',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 -- Reminders Table
 CREATE TABLE IF NOT EXISTS reminders (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
-  date TIMESTAMP WITH TIME ZONE NOT NULL,
-  customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  customer_id TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed')),
+  completed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 -- Products Table
 CREATE TABLE IF NOT EXISTS products (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   barcode TEXT,
@@ -102,11 +107,12 @@ CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
 CREATE INDEX IF NOT EXISTS idx_customers_user_id ON customers(user_id);
 CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
-CREATE INDEX IF NOT EXISTS idx_debts_customer_id ON debts(customer_id);
+CREATE INDEX IF NOT EXISTS idx_debts_status ON debts(status);
 CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_date ON reminders(date);
 CREATE INDEX IF NOT EXISTS idx_products_user_id ON products(user_id);
+CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
 CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
 
 -- Enable RLS on all tables

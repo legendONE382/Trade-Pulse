@@ -1,14 +1,5 @@
 // LocalStorage utility functions for data persistence
 
-const STORAGE_KEYS = {
-  SALES: 'tradepulse_sales',
-  EXPENSES: 'tradepulse_expenses',
-  CUSTOMERS: 'tradepulse_customers',
-  DEBTS: 'tradepulse_debts',
-  INVOICES: 'tradepulse_invoices',
-  REMINDERS: 'tradepulse_reminders',
-}
-
 export const storage = {
   get: (key) => {
     try {

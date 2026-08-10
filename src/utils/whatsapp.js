@@ -1,5 +1,12 @@
 // WhatsApp sharing utility functions
 
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN'
+  }).format(amount)
+}
+
 export const shareViaWhatsApp = (phone, message) => {
   const encodedMessage = encodeURIComponent(message)
   const url = phone 
@@ -19,11 +26,11 @@ ${customer.phone ? `📱 Phone: ${customer.phone}` : ''}
 *Items:*
 ${invoice.items.map((item, i) => 
   `${i + 1}. ${item.description}
-   Qty: ${item.quantity} × $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}`
+   Qty: ${item.quantity} × ${formatCurrency(item.price)} = ${formatCurrency(item.quantity * item.price)}`
 ).join('\n\n')}
 
 ━━━━━━━━━━━━━━━━━━━━
-*TOTAL: $${invoice.total.toFixed(2)}*
+*TOTAL: ${formatCurrency(invoice.total)}*
 
 ${invoice.notes ? `📝 Notes: ${invoice.notes}` : ''}
 ${invoice.dueDate ? `⏰ Due: ${invoice.dueDate}` : ''}

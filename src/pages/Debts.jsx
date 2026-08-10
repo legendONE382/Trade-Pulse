@@ -55,7 +55,7 @@ export default function Debts() {
   }
 
   const handleMarkPaid = async (id) => {
-    await updateDebt(id, { status: 'paid' })
+    await updateDebt(id, { status: 'paid', paid_at: new Date().toISOString() })
     loadDebts()
   }
 

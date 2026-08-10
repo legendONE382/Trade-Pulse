@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Check, X, Pencil, Trash2, Share2, Bell } from 'lucide-react'
+import { Plus, Check, X, Pencil, Trash2, Share2, Bell, Calendar, CheckCircle } from 'lucide-react'
 import { getReminders, addReminder, updateReminder, deleteReminder, getCustomers, formatDate } from '../utils/supabaseStorage'
 import { shareViaWhatsApp, formatReminderForWhatsApp } from '../utils/whatsapp'
 
@@ -55,7 +55,7 @@ export default function Reminders() {
   }
 
   const handleComplete = async (id) => {
-    await updateReminder(id, { status: 'completed' })
+    await updateReminder(id, { status: 'completed', completed_at: new Date().toISOString() })
     loadReminders()
   }
 

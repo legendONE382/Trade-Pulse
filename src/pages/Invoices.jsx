@@ -59,6 +59,7 @@ export default function Invoices() {
     await addInvoice({
       ...formData,
       total: calculateTotal(),
+      status: 'pending',
     })
 
     setFormData({

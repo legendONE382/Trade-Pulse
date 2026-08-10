@@ -1,5 +1,25 @@
 import { supabase } from '../lib/supabase'
 
+// Utility functions
+export const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2)
+}
+
+export const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('en-NG', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+export const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN'
+  }).format(amount)
+}
+
 // Helper function to get current user
 const getCurrentUserId = async () => {
   try {
@@ -550,24 +570,4 @@ export const deleteProduct = async (id) => {
   }
   
   return true
-}
-
-// Utility functions
-export const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2)
-}
-
-export const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('en-NG', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
-export const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN'
-  }).format(amount)
 }
