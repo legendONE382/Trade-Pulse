@@ -15,8 +15,8 @@ const initialFormValues = {
 }
 
 export default function Sales() {
-  const sales = useAsyncData(() => salesService.list())
-  const customers = useAsyncData(() => customersService.list())
+  const sales = useAsyncData(salesService.list)
+  const customers = useAsyncData(customersService.list)
 
   const form = useForm(initialFormValues)
   const [showForm, setShowForm] = useState(false)

@@ -7,8 +7,8 @@ import { formatCurrency, formatDate } from '../utils/supabaseStorage'
 import { PageHeader, Button, Modal, Badge, EmptyState, ConfirmDialog, LoadingSpinner } from '../components/ui'
 
 export default function Debts() {
-  const { data: debts, loading: debtsLoading, error: debtsError, reload: loadDebts } = useAsyncData(() => debtsService.list())
-  const { data: customers, reload: loadCustomers } = useAsyncData(() => customersService.list())
+  const { data: debts, loading: debtsLoading, error: debtsError, reload: loadDebts } = useAsyncData(debtsService.list)
+  const { data: customers, reload: loadCustomers } = useAsyncData(customersService.list)
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({ customer_id: '', amount: '', description: '', due_date: '' })

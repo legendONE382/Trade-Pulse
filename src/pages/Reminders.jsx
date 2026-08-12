@@ -8,8 +8,8 @@ import { shareViaWhatsApp, formatReminderForWhatsApp } from '../utils/whatsapp'
 import { PageHeader, Button, Modal, Badge, EmptyState, ConfirmDialog, LoadingSpinner } from '../components/ui'
 
 export default function Reminders() {
-  const { data: reminders, loading: remindersLoading, error: remindersError, reload: loadReminders } = useAsyncData(() => remindersService.list())
-  const { data: customers } = useAsyncData(() => customersService.list())
+  const { data: reminders, loading: remindersLoading, error: remindersError, reload: loadReminders } = useAsyncData(remindersService.list)
+  const { data: customers } = useAsyncData(customersService.list)
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({ title: '', description: '', date: '', customer_id: '' })

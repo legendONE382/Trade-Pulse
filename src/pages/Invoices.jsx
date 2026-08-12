@@ -15,8 +15,8 @@ const initialFormData = {
 }
 
 export default function Invoices() {
-  const { data: invoices, loading: invoicesLoading, error: invoicesError, reload: loadInvoices } = useAsyncData(() => invoicesService.list())
-  const { data: customers } = useAsyncData(() => customersService.list())
+  const { data: invoices, loading: invoicesLoading, error: invoicesError, reload: loadInvoices } = useAsyncData(invoicesService.list)
+  const { data: customers } = useAsyncData(customersService.list)
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState(initialFormData)

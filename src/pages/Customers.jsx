@@ -15,7 +15,7 @@ import {
 const EMPTY_FORM = { name: '', phone: '', email: '', notes: '' }
 
 export default function Customers() {
-  const { data: customers, loading, error, reload } = useAsyncData(() => customersService.list())
+  const { data: customers, loading, error, reload } = useAsyncData(customersService.list)
   const form = useForm(EMPTY_FORM)
 
   const [showModal, setShowModal] = useState(false)
