@@ -22,40 +22,24 @@ export async function fetchAll(table, userId) {
 }
 
 export async function insertOne(table, record) {
-  try {
-    const { data, error } = await supabase.from(table).insert([record]).select().single()
-    if (error) throw error
-    const all = localGet(table)
-    localSet(table, [...all, data])
-    return data
-  } catch {
-    const all = localGet(table)
-    localSet(table, [...all, record])
-    return record
-  }
+  const { data, error } = await supabase.from(table).insert([record]).select().single()
+  if (error) throw error
+  const all = localGet(table)
+  localSet(table, [...all, data])
+  return data
 }
 
 export async function updateOne(table, id, userId, updates) {
-  try {
-    const { data, error } = await supabase.from(table).update(updates).eq('id', id).eq('user_id', userId).select().single()
-    if (error) throw error
-    const all = localGet(table).map(r => r.id === id ? data : r)
-    localSet(table, all)
-    return data
-  } catch {
-    const all = localGet(table).map(r => r.id === id ? { ...r, ...updates } : r)
-    localSet(table, all)
-    return all.find(r => r.id === id)
-  }
+  const { data, error } = await supabase.from(table).update(updates).eq('id', id).eq('user_id', userId).select().single()
+  if (error) throw error
+  const all = localGet(table).map(r => r.id === id ? data : r)
+  localSet(table, all)
+  return data
 }
 
 export async function deleteOne(table, id, userId) {
-  try {
-    const { error } = await supabase.from(table).delete().eq('id', id).eq('user_id', userId)
-    if (error) throw error
-  } catch {
-    // ignore
-  }
+  const { error } = await supabase.from(table).delete().eq('id', id).eq('user_id', userId)
+  if (error) throw error
   const all = localGet(table).filter(r => r.id !== id)
   localSet(table, all)
   return true
