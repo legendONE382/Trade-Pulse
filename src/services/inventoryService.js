@@ -1,9 +1,7 @@
-import { supabase } from '../lib/supabase'
+import { getCurrentUserId } from './helpers'
+import { fetchAll, insertOne, updateOne, deleteOne } from './storage'
 
-const getCurrentUserId = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id
-}
+const TABLE = 'inventory_movements'
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2)
 
@@ -11,39 +9,27 @@ export const inventoryService = {
   async list(productId = null) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    let query = supabase
-      .from('inventory_movements')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    if (productId) query = query.eq('product_id', productId)
-    const { data, error } = await query
-    if (error) {
-      console.error('Error fetching inventory:', error)
-      return []
+    const all = await fetchAll(TABLE, userId)
+    if (productId) {
+      return all.filter(m => m.product_id === productId)
     }
-    return data || []
+    return all
   },
 
   async record({ productId, type, quantity, referenceId, referenceType, notes }) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { data, error } = await supabase
-      .from('inventory_movements')
-      .insert([{
-        id: generateId(),
-        user_id: userId,
-        product_id: productId,
-        type,
-        quantity,
-        reference_id: referenceId || null,
-        reference_type: referenceType || null,
-        notes: notes || null,
-      }])
-      .select()
-      .single()
-    if (error) throw error
-    return data
+    const id = generateId()
+    return insertOne(TABLE, {
+      id,
+      user_id: userId,
+      product_id: productId,
+      type,
+      quantity,
+      reference_id: referenceId || null,
+      reference_type: referenceType || null,
+      notes: notes || null,
+    })
   },
 
   async getByProduct(productId) {

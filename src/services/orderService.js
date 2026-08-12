@@ -1,9 +1,7 @@
-import { supabase } from '../lib/supabase'
+import { getCurrentUserId } from './helpers'
+import { fetchAll, insertOne, updateOne, deleteOne } from './storage'
 
-const getCurrentUserId = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id
-}
+const TABLE = 'orders'
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2)
 
@@ -11,54 +9,26 @@ export const orderService = {
   async list() {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    if (error) {
-      console.error('Error fetching orders:', error)
-      return []
-    }
-    return data || []
+    return fetchAll(TABLE, userId)
   },
 
   async create(order) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { data, error } = await supabase
-      .from('orders')
-      .insert([{ id: generateId(), ...order, user_id: userId }])
-      .select()
-      .single()
-    if (error) throw error
-    return data
+    const id = generateId()
+    return insertOne(TABLE, { id, ...order, user_id: userId })
   },
 
   async update(id, updates) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { data, error } = await supabase
-      .from('orders')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single()
-    if (error) throw error
-    return data
+    return updateOne(TABLE, id, userId, updates)
   },
 
   async remove(id) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { error } = await supabase
-      .from('orders')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
-    if (error) throw error
-    return true
+    return deleteOne(TABLE, id, userId)
   },
 
   async confirm(id) {

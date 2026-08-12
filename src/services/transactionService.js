@@ -1,9 +1,7 @@
-import { supabase } from '../lib/supabase'
+import { getCurrentUserId } from './helpers'
+import { fetchAll, insertOne, deleteOne } from './storage'
 
-const getCurrentUserId = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id
-}
+const TABLE = 'transactions'
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2)
 
@@ -11,44 +9,30 @@ export const transactionService = {
   async list(filters = {}) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    let query = supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false })
-    if (filters.type) query = query.eq('type', filters.type)
-    if (filters.from) query = query.gte('date', filters.from)
-    if (filters.to) query = query.lte('date', filters.to)
-    const { data, error } = await query
-    if (error) {
-      console.error('Error fetching transactions:', error)
-      return []
+    let all = await fetchAll(TABLE, userId)
+    if (filters.type) {
+      all = all.filter(t => t.type === filters.type)
     }
-    return data || []
+    if (filters.from) {
+      all = all.filter(t => t.date >= filters.from)
+    }
+    if (filters.to) {
+      all = all.filter(t => t.date <= filters.to)
+    }
+    return all
   },
 
   async create(transaction) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { data, error } = await supabase
-      .from('transactions')
-      .insert([{ id: generateId(), ...transaction, user_id: userId }])
-      .select()
-      .single()
-    if (error) throw error
-    return data
+    const id = generateId()
+    return insertOne(TABLE, { id, ...transaction, user_id: userId })
   },
 
   async remove(id) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
-    if (error) throw error
-    return true
+    return deleteOne(TABLE, id, userId)
   },
 
   async getSummary(dateFrom, dateTo) {

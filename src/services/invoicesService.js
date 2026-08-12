@@ -1,62 +1,57 @@
-import { supabase } from '../lib/supabase'
+import { getCurrentUserId } from './helpers'
+import { fetchAll, insertOne, updateOne, deleteOne } from './storage'
 
-const getCurrentUserId = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id
-}
+const TABLE = 'invoices'
 
 export const invoicesService = {
   async list() {
     const userId = await getCurrentUserId()
     if (!userId) return []
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    if (error) {
-      console.error('Error fetching invoices:', error)
-      return []
-    }
-    return data || []
+    return fetchAll(TABLE, userId)
+  },
+
+  async listPending() {
+    const userId = await getCurrentUserId()
+    if (!userId) return []
+    const all = await fetchAll(TABLE, userId)
+    return all.filter(i => i.status === 'pending')
+  },
+
+  async listPaid() {
+    const userId = await getCurrentUserId()
+    if (!userId) return []
+    const all = await fetchAll(TABLE, userId)
+    return all.filter(i => i.status === 'paid')
   },
 
   async create(invoice) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
     const id = Date.now().toString(36) + Math.random().toString(36).substr(2)
-    const { data, error } = await supabase
-      .from('invoices')
-      .insert([{ id, ...invoice, user_id: userId }])
-      .select()
-      .single()
-    if (error) throw error
-    return data
+    return insertOne(TABLE, { id, ...invoice, user_id: userId })
   },
 
   async update(id, updates) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { data, error } = await supabase
-      .from('invoices')
-      .update(updates)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single()
-    if (error) throw error
-    return data
+    return updateOne(TABLE, id, userId, updates)
+  },
+
+  async send(id) {
+    const userId = await getCurrentUserId()
+    if (!userId) throw new Error('Not authenticated')
+    return updateOne(TABLE, id, userId, { status: 'sent' })
+  },
+
+  async markPaid(id) {
+    const userId = await getCurrentUserId()
+    if (!userId) throw new Error('Not authenticated')
+    return updateOne(TABLE, id, userId, { status: 'paid', payment_status: 'paid' })
   },
 
   async remove(id) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
-    const { error } = await supabase
-      .from('invoices')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
-    if (error) throw error
-    return true
+    return deleteOne(TABLE, id, userId)
   },
 }
