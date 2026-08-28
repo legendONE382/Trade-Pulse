@@ -14,7 +14,7 @@ export default function useForm(initialValues = {}) {
     setError(null)
   }, [initialValues])
 
-  const handleSubmit = useCallback(async (onSubmit) => {
+  const handleSubmit = useCallback((onSubmit) => {
     return async (e) => {
       e.preventDefault()
       setIsSubmitting(true)
