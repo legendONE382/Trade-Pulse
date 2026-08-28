@@ -62,21 +62,34 @@ ALTER TABLE inventory_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own inventory_movements" ON inventory_movements;
+DROP POLICY IF EXISTS "Users can insert own inventory_movements" ON inventory_movements;
+DROP POLICY IF EXISTS "Users can update own inventory_movements" ON inventory_movements;
+DROP POLICY IF EXISTS "Users can delete own inventory_movements" ON inventory_movements;
 CREATE POLICY "Users can view own inventory_movements" ON inventory_movements FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own inventory_movements" ON inventory_movements FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own inventory_movements" ON inventory_movements FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own inventory_movements" ON inventory_movements FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own orders" ON orders;
+DROP POLICY IF EXISTS "Users can insert own orders" ON orders;
+DROP POLICY IF EXISTS "Users can update own orders" ON orders;
+DROP POLICY IF EXISTS "Users can delete own orders" ON orders;
 CREATE POLICY "Users can view own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own orders" ON orders FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own orders" ON orders FOR DELETE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can insert own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can update own transactions" ON transactions;
+DROP POLICY IF EXISTS "Users can delete own transactions" ON transactions;
 CREATE POLICY "Users can view own transactions" ON transactions FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own transactions" ON transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own transactions" ON transactions FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own transactions" ON transactions FOR DELETE USING (auth.uid() = user_id);
 
 -- Auto-update updated_at for orders
+DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
