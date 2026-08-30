@@ -4,7 +4,8 @@ import { invoicesService } from '../services/invoicesService'
 import { customersService } from '../services/customersService'
 import useAsyncData from '../hooks/useAsyncData'
 import { formatCurrency, formatDate } from '../utils/supabaseStorage'
-import { shareViaWhatsApp, formatInvoiceForWhatsApp } from '../utils/whatsapp'
+import { buildInvoiceMessage, getBusinessName, openWhatsApp } from '../utils/whatsapp'
+import { useAuth } from '../contexts/AuthContext'
 import { PageHeader, Button, Modal, EmptyState, ConfirmDialog, LoadingSpinner } from '../components/ui'
 
 const initialFormData = {
@@ -17,6 +18,8 @@ const initialFormData = {
 export default function Invoices() {
   const { data: invoices, loading: invoicesLoading, error: invoicesError, reload: loadInvoices } = useAsyncData(invoicesService.list)
   const { data: customers } = useAsyncData(customersService.list)
+  const { user } = useAuth()
+  const businessName = getBusinessName(user)
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState(initialFormData)
@@ -99,8 +102,12 @@ export default function Invoices() {
 
   const shareInvoiceViaWhatsApp = (invoice) => {
     const customer = customers.find(c => c.id === invoice.customer_id)
-    const message = formatInvoiceForWhatsApp(invoice, customer, generateInvoiceNumber(invoice.id))
-    shareViaWhatsApp(customer?.phone, message)
+    const message = buildInvoiceMessage(invoice, customer, businessName)
+    const result = openWhatsApp(customer?.phone, message)
+    if (!result.ok) {
+      // No valid phone — still open wa.me so user can pick a contact
+      openWhatsApp(null, message)
+    }
   }
 
   if (invoicesLoading) return <LoadingSpinner className="py-20" />

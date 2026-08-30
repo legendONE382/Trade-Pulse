@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, ShoppingBag } from 'lucide-react'
+import { Plus, Pencil, Trash2, ShoppingBag, MessageCircle } from 'lucide-react'
 import useAsyncData from '../hooks/useAsyncData'
 import useForm from '../hooks/useForm'
 import { salesService } from '../services/salesService'
 import { customersService } from '../services/customersService'
 import { formatCurrency, formatDate } from '../utils/supabaseStorage'
+import { buildReceiptMessage, getBusinessName, openWhatsApp } from '../utils/whatsapp'
+import { useAuth } from '../contexts/AuthContext'
 import { PageHeader, Button, Modal, EmptyState, ConfirmDialog, Badge, LoadingSpinner } from '../components/ui'
 
 const initialFormValues = {
@@ -153,6 +155,9 @@ export default function Sales() {
                       {formatDate(sale.date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Button variant="ghost" size="sm" onClick={() => handleReceiptWhatsApp(sale)} className="mr-1" title="Send Receipt via WhatsApp">
+                        <MessageCircle className="w-4 h-4 text-green-600" />
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => openEdit(sale)} className="mr-1">
                         <Pencil className="w-4 h-4" />
                       </Button>

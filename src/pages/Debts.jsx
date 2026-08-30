@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { Plus, CheckCircle, Trash2, Clock } from 'lucide-react'
+import { Plus, CheckCircle, Trash2, Clock, MessageCircle } from 'lucide-react'
 import { debtsService } from '../services/debtsService'
 import { customersService } from '../services/customersService'
 import useAsyncData from '../hooks/useAsyncData'
 import { formatCurrency, formatDate } from '../utils/supabaseStorage'
+import { buildDebtReminderMessage, getBusinessName, openWhatsApp } from '../utils/whatsapp'
+import { useAuth } from '../contexts/AuthContext'
 import { PageHeader, Button, Modal, Badge, EmptyState, ConfirmDialog, LoadingSpinner } from '../components/ui'
 
 export default function Debts() {
   const { data: debts, loading: debtsLoading, error: debtsError, reload: loadDebts } = useAsyncData(debtsService.list)
   const { data: customers, reload: loadCustomers } = useAsyncData(customersService.list)
+  const { user } = useAuth()
+  const businessName = getBusinessName(user)
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({ customer_id: '', amount: '', description: '', due_date: '' })
@@ -50,6 +54,13 @@ export default function Debts() {
     } catch (err) {
       alert(err.message || 'Failed to mark as paid')
     }
+  }
+
+  const handleDebtReminder = (debt) => {
+    const customer = customers.find(c => c.id === debt.customer_id)
+    const message = buildDebtReminderMessage(customer, debt, businessName)
+    const result = openWhatsApp(customer?.phone, message)
+    if (!result.ok) openWhatsApp(null, message)
   }
 
   const handleDelete = async () => {
@@ -134,6 +145,7 @@ export default function Debts() {
                   </div>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
+                  <Button size="sm" variant="ghost" onClick={() => handleDebtReminder(debt)} icon={MessageCircle} title="Send Debt Reminder via WhatsApp" className="flex-1 sm:flex-none">WhatsApp</Button>
                   <Button size="sm" onClick={() => handleMarkPaid(debt.id)} icon={CheckCircle} className="flex-1 sm:flex-none">Paid</Button>
                   <Button size="sm" variant="ghost" onClick={() => setDeleteId(debt.id)} icon={Trash2}>Delete</Button>
                 </div>

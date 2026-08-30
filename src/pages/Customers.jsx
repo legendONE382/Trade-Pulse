@@ -1,8 +1,13 @@
-import { useState } from 'react'
-import { Plus, Pencil, Trash2, Phone, Mail, Users } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Plus, Pencil, Trash2, Phone, Mail, Users, MessageCircle, Bell, FileText, Receipt, Edit3 } from 'lucide-react'
 import { customersService } from '../services/customersService'
+import { debtsService } from '../services/debtsService'
 import useAsyncData from '../hooks/useAsyncData'
 import useForm from '../hooks/useForm'
+import { useAuth } from '../contexts/AuthContext'
+import { getBusinessName, buildGreetingMessage, buildDebtReminderMessage, openWhatsApp } from '../utils/whatsapp'
+import WhatsAppButton from '../components/WhatsAppButton'
+import CustomerWhatsAppModal from '../components/CustomerWhatsAppModal'
 import {
   PageHeader,
   Button,
@@ -16,12 +21,25 @@ const EMPTY_FORM = { name: '', phone: '', email: '', notes: '' }
 
 export default function Customers() {
   const { data: customers, loading, error, reload } = useAsyncData(customersService.list)
+  const { data: debts } = useAsyncData(debtsService.list)
+  const { user } = useAuth()
+  const businessName = getBusinessName(user)
   const form = useForm(EMPTY_FORM)
 
   const [showModal, setShowModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [customMsgCustomer, setCustomMsgCustomer] = useState(null)
+
+  const debtsByCustomer = useMemo(() => {
+    const map = {}
+    for (const d of debts || []) {
+      if (d.status !== 'pending') continue
+      map[d.customer_id] = (map[d.customer_id] || 0) + Number(d.amount || 0)
+    }
+    return map
+  }, [debts])
 
   const openAdd = () => {
     setEditingCustomer(null)
@@ -99,40 +117,78 @@ export default function Customers() {
 
       {!loading && customers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {customers.map((customer) => (
-            <div key={customer.id} className="card">
-              <div className="flex justify-between items-start mb-3">
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">{customer.name}</h3>
-                  {customer.phone && (
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                      <Phone className="w-3 h-3 flex-shrink-0" />
-                      {customer.phone}
-                    </p>
-                  )}
-                  {customer.email && (
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                      <Mail className="w-3 h-3 flex-shrink-0" />
-                      <span className="truncate">{customer.email}</span>
-                    </p>
-                  )}
+          {customers.map((customer) => {
+            const outstanding = debtsByCustomer[customer.id] || 0
+            return (
+              <div key={customer.id} className="card">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate">{customer.name}</h3>
+                    {customer.phone && (
+                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <Phone className="w-3 h-3 flex-shrink-0" />
+                        {customer.phone}
+                      </p>
+                    )}
+                    {customer.email && (
+                      <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <Mail className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{customer.email}</span>
+                      </p>
+                    )}
+                    {outstanding > 0 && (
+                      <p className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-2 inline-block">
+                        Owes: {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(outstanding)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(customer)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(customer)}>
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(customer)}>
-                    <Pencil className="w-4 h-4" />
+                {customer.notes && (
+                  <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mb-3">
+                    {customer.notes}
+                  </p>
+                )}
+
+                {/* WhatsApp actions */}
+                <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+                  <WhatsAppButton
+                    phoneNumber={customer.phone}
+                    message={buildGreetingMessage(customer, businessName)}
+                    label="WhatsApp"
+                    size="sm"
+                    variant="success"
+                    icon={MessageCircle}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    icon={Edit3}
+                    onClick={() => setCustomMsgCustomer(customer)}
+                  >
+                    Message
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(customer)}>
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
+                  {outstanding > 0 && (
+                    <WhatsAppButton
+                      phoneNumber={customer.phone}
+                      message={buildDebtReminderMessage(customer, outstanding, businessName)}
+                      label="Reminder"
+                      size="sm"
+                      variant="secondary"
+                      icon={Bell}
+                    />
+                  )}
                 </div>
               </div>
-              {customer.notes && (
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                  {customer.notes}
-                </p>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -160,8 +216,9 @@ export default function Customers() {
               value={form.values.phone}
               onChange={(e) => form.setValue('phone', e.target.value)}
               className="input-field"
-              placeholder="Phone number"
+              placeholder="08012345678"
             />
+            <p className="text-xs text-gray-400 mt-1">Nigerian numbers: 080..., +234..., 234... — used for WhatsApp</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -198,6 +255,12 @@ export default function Customers() {
           </div>
         </form>
       </Modal>
+
+      <CustomerWhatsAppModal
+        isOpen={!!customMsgCustomer}
+        onClose={() => setCustomMsgCustomer(null)}
+        customer={customMsgCustomer}
+      />
 
       <ConfirmDialog
         isOpen={!!deleteTarget}
