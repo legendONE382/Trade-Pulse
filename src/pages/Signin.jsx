@@ -10,6 +10,7 @@ export default function Signin() {
     email: '',
     password: '',
   })
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -25,6 +26,14 @@ export default function Signin() {
     if (error) {
       setError(error.message)
     } else {
+      localStorage.setItem('tradepulse_remember_me', rememberMe ? 'true' : 'false')
+      if (rememberMe) {
+        sessionStorage.setItem('tradepulse_session_active', 'true')
+      } else {
+        // For non-remembered sessions, mark as session-only
+        sessionStorage.setItem('tradepulse_session_active', 'true')
+        localStorage.setItem('tradepulse_remember_me', 'false')
+      }
       navigate('/dashboard')
     }
   }
@@ -89,8 +98,13 @@ export default function Signin() {
             </div>
 
             <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
               <Link to="/forgot-password" className="text-sm text-primary-600 hover:text-primary-700">

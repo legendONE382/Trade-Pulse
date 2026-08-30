@@ -8,28 +8,33 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is already stored in localStorage
-    const storedUser = localStorage.getItem('tradepulse_user')
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch (e) {
-        console.error('Failed to parse stored user:', e)
+    const initAuth = async () => {
+      // Remember-me check: if user chose NOT to be remembered and this is a new browser session,
+      // clear the persisted session so they must log in again.
+      const rememberMe = localStorage.getItem('tradepulse_remember_me')
+      const sessionActive = sessionStorage.getItem('tradepulse_session_active')
+      if (rememberMe === 'false' && !sessionActive) {
+        await supabase.auth.signOut()
+        localStorage.removeItem('tradepulse_user')
+        setUser(null)
+        setLoading(false)
+        return
       }
-    }
 
-    // Check active session from Supabase
-    supabase.auth.getSession().then(({ data: { session } }) => {
+      // Check active session from Supabase
+      const { data: { session } } = await supabase.auth.getSession()
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      // Persist user to localStorage
       if (currentUser) {
         localStorage.setItem('tradepulse_user', JSON.stringify(currentUser))
+        sessionStorage.setItem('tradepulse_session_active', 'true')
       } else {
         localStorage.removeItem('tradepulse_user')
       }
       setLoading(false)
-    })
+    }
+
+    initAuth()
 
     // Listen for auth changes
     const {
@@ -37,11 +42,12 @@ export function AuthProvider({ children }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null
       setUser(currentUser)
-      // Persist user to localStorage
       if (currentUser) {
         localStorage.setItem('tradepulse_user', JSON.stringify(currentUser))
+        sessionStorage.setItem('tradepulse_session_active', 'true')
       } else {
         localStorage.removeItem('tradepulse_user')
+        sessionStorage.removeItem('tradepulse_session_active')
       }
       setLoading(false)
     })
@@ -71,6 +77,8 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     localStorage.removeItem('tradepulse_user')
+    sessionStorage.removeItem('tradepulse_session_active')
+    // Keep tradepulse_remember_me so next visit knows preference, but don't force it
     const { error } = await supabase.auth.signOut()
     return { error }
   }
