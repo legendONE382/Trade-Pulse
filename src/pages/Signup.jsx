@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, Navigate } from 'react-router-dom'
 import { DollarSign, Mail, Lock, User, Building2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Signup() {
   const navigate = useNavigate()
-  const { signUp } = useAuth()
+  const { signUp, user, loading: authLoading } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,6 +15,8 @@ export default function Signup() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  if (!authLoading && user) return <Navigate to="/dashboard" replace />
 
   const handleSubmit = async (e) => {
     e.preventDefault()
